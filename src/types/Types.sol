@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-// TODO: Global types
+////////////////////////////////////////////////////////////////
+//                           Global                           //
+////////////////////////////////////////////////////////////////
+
+/// @notice A dedicated type for a hash.
+type Hash is bytes32;
