@@ -35,6 +35,5 @@ jobs:
 
       - name: Run Forge fmt
         run: |
-          forge fmt
-          git diff --exit-code .
+          forge fmt --check
         id: lint

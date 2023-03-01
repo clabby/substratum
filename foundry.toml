@@ -2,6 +2,7 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
+remappings = ['forge-std=lib/forge-std/src', 'src=src']
 via_ir = true
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
