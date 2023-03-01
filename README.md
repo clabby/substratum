@@ -18,6 +18,9 @@
 - :dizzy: Use custom types for values such as hashes, gas limits, timestamps, balances, etc.
 - :package: Support legacy contract storage layouts, but refactor for new slots going forward.
 
+## Contributing
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## TODO
 
 **Stage 0: Repo setup**
