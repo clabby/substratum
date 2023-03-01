@@ -89,7 +89,7 @@ Above each of these sections, the following header style should be used:
 ////////////////////////////////////////////////////////////////
 ```
 
-To quickly generate a section header, use the [Comment Block Generator](https://blocks.jkniest.dev/). *TODO: Add a local script to do this*
+To quickly generate a section header, use the [section header script](./scripts/section_header.py).
 
 If for any reason the above sections need to be sub-divided further, feel free to create more section headers.
 

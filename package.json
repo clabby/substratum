@@ -1,0 +1,12 @@
+{
+  "name": "substratum",
+  "version": "0.0.1",
+  "description": "substratum is an opinionated, spec-compliant, optimized version of Optimism's contracts-bedrock package.",
+  "repository": "https://github.com/clabby/substratum",
+  "author": "clabby <https://github.com/clabby>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "gen:header": "python3 scripts/section_header.py"
+  }
+}
