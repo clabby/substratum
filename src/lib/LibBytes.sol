@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/// @title LibBytes - A library for manipulating dynamic bytes types in memory
+/// @title LibBytes
+/// @notice A library for manipulating dynamic bytes types in memory
 library LibBytes {
     /// @custom:attribution https://github.com/GNSPS/solidity-bytes-utils
     /// @notice Slices a byte array with a given starting index and length. Returns a new byte array
