@@ -35,6 +35,7 @@ library LibHashing {
             let ptr := mload(0x40)
 
             // Store the abi-encoded withdrawal transaction in memory.
+            // TODO: Using the identity precompile for long copies may be more efficient here.
 
             // Copy nonce
             mstore(ptr, mload(_tx))
@@ -59,21 +60,17 @@ library LibHashing {
             mstore(add(ptr, 0xC0), dataLen)
 
             // Copy data (wen mcopy)
-            let dataLenRounded := shl(0x05, shr(0x05, add(dataLen, 0x1F)))
-            let initDataOffset := add(_tx, 0xE0)
-            let dataEnd := add(initDataOffset, dataLenRounded)
-            for { let offset := 0 } lt(offset, dataLenRounded) { offset := add(offset, 0x20) } {
-                mstore(add(ptr, add(0xE0, offset)), mload(add(initDataOffset, offset)))
+            let dataLenRounded := and(not(0x1F), add(dataLen, 0xFF))
+            let dataEnd := add(_tx, dataLenRounded)
+            for { let offset := 0xE0 } lt(offset, dataLenRounded) { offset := add(offset, 0x20) } {
+                mstore(add(ptr, offset), mload(add(_tx, offset)))
             }
 
-            // Calculate the full length of the data
-            let fullLength := add(0xE0, dataLenRounded)
-
             // Compute the hash
-            _hash := keccak256(ptr, fullLength)
+            _hash := keccak256(ptr, dataLenRounded)
 
             // Update the free memory pointer to reflect the newly allocated memory
-            mstore(0x40, add(ptr, fullLength))
+            mstore(0x40, add(ptr, dataLenRounded))
         }
     }
 }

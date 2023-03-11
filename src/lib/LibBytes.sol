@@ -11,68 +11,43 @@ library LibBytes {
     /// @param _bytes Byte array to slice.
     /// @param _start Starting index of the slice.
     /// @param _length Length of the slice.
-    /// @return Slice of the input byte array.
-    function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal pure returns (bytes memory) {
-        unchecked {
-            require(_length + 31 >= _length, "slice_overflow");
-            require(_start + _length >= _start, "slice_overflow");
-            require(_bytes.length >= _start + _length, "slice_outOfBounds");
-        }
-
-        bytes memory tempBytes;
-
+    /// @return _slice Slice of the input byte array.
+    function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal view returns (bytes memory _slice) {
         assembly {
-            switch iszero(_length)
-            case 0 {
+            // Assertions:
+            // - _length + 31 >= _length
+            // - _start + _length >= _start
+            if or(lt(add(_length, 0x1F), _length), lt(add(_start, _length), _start)) {
+                // Store the error signature for "SliceOverflow()"
+                mstore(0x00, 0x47aaf07a)
+                // Revert
+                revert(0x1c, 0x04)
+            }
+            // Assertion: _bytes.length >= _start + _length
+            if lt(mload(_bytes), add(_start, _length)) {
+                // Store the error signature for "SliceOutOfBounds()"
+                mstore(0x00, 0x3b99b53d)
+                // Revert
+                revert(0x1c, 0x04)
+            }
+
+            switch _length
+            case 0 { _slice := 0x60 }
+            default {
                 // Get a location of some free memory and store it in tempBytes as
                 // Solidity does for memory variables.
-                tempBytes := mload(0x40)
+                _slice := mload(0x40)
 
-                // The first word of the slice result is potentially a partial
-                // word read from the original array. To read it, we calculate
-                // the length of that partial word and start copying that many
-                // bytes into the array. The first word we copy will start with
-                // data we don't care about, but the last `lengthmod` bytes will
-                // land at the beginning of the contents of the new array. When
-                // we're done copying, we overwrite the full first word with
-                // the actual length of the slice.
-                let lengthmod := and(_length, 31)
+                // Store the length of the slice
+                mstore(_slice, _length)
 
-                // The multiplication in the next line is necessary
-                // because when slicing multiples of 32 bytes (lengthmod == 0)
-                // the following copy loop was copying the origin's length
-                // and then ending prematurely not copying everything it should.
-                let mc := add(add(tempBytes, lengthmod), mul(0x20, iszero(lengthmod)))
-                let end := add(mc, _length)
+                // Slice the `_bytes` array using the identity precompile
+                pop(staticcall(gas(), 0x04, add(add(_bytes, 0x20), _start), _length, add(_slice, 0x20), _length))
 
-                for {
-                    // The multiplication in the next line has the same exact purpose
-                    // as the one above.
-                    let cc := add(add(add(_bytes, lengthmod), mul(0x20, iszero(lengthmod))), _start)
-                } lt(mc, end) {
-                    mc := add(mc, 0x20)
-                    cc := add(cc, 0x20)
-                } { mstore(mc, mload(cc)) }
-
-                mstore(tempBytes, _length)
-
-                //update free-memory pointer
-                //allocating the array padded to 32 bytes like the compiler does now
-                mstore(0x40, and(add(mc, 31), not(31)))
-            }
-            //if we want a zero-length slice let's just return a zero-length array
-            default {
-                tempBytes := mload(0x40)
-
-                //zero out the 32 bytes slice we are about to return
-                //we need to do it because Solidity does not garbage collect
-                mstore(tempBytes, 0)
-
-                mstore(0x40, add(tempBytes, 0x20))
+                // Update the free memory pointer
+                mstore(0x40, add(_slice, and(add(_length, 0x3F), not(0x1F))))
             }
         }
-
-        return tempBytes;
     }
 
     /// @notice Slices a byte array with a given starting index up to the end of the original byte
@@ -80,7 +55,7 @@ library LibBytes {
     /// @param _bytes Byte array to slice.
     /// @param _start Starting index of the slice.
     /// @return Slice of the input byte array.
-    function slice(bytes memory _bytes, uint256 _start) internal pure returns (bytes memory) {
+    function slice(bytes memory _bytes, uint256 _start) internal view returns (bytes memory) {
         if (_start >= _bytes.length) {
             return bytes("");
         }
@@ -106,7 +81,7 @@ library LibBytes {
             // Update the free memory pointer to allocate memory for the new array.
             // To do this, we add the length of the new array + 32 bytes for the array length
             // rounded up to the nearest 32 byte boundary to the current free memory pointer.
-            mstore(0x40, add(_nibbles, shl(0x05, shr(0x05, add(nibblesLength, 0x3F)))))
+            mstore(0x40, add(_nibbles, and(not(0x1F), add(nibblesLength, 0x3F))))
 
             // Store the length of the new array in memory
             mstore(_nibbles, nibblesLength)

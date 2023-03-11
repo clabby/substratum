@@ -19,6 +19,12 @@ type Timestamp is uint64;
 /// @dev Unit: seconds
 type Duration is uint64;
 
+/// @notice A dedicated memory pointer type
+/// @dev It is unrealistic that a pointer would ever be larger than 24 bits (16777.215KB max)
+///      given the 30_000_000 block gas limit on L1.
+/// TODO: Assess for L2 params.
+type MemoryPointer is uint24;
+
 ////////////////////////////////////////////////////////////////
 //                          Structs                           //
 ////////////////////////////////////////////////////////////////
@@ -85,4 +91,26 @@ struct WithdrawalTransaction {
     uint256 value;
     uint256 gasLimit;
     bytes data;
+}
+
+////////////////////////////////////////////////////////////////
+//                       RLP Libraries                        //
+////////////////////////////////////////////////////////////////
+
+/// @notice A dedicated type for an RLP item.
+/// @dev The RLP item contains two pieces of information:
+/// ┌───────────┬────────────────┐
+/// │   Bits    │  Description   │
+/// ├───────────┼────────────────┤
+/// │ [0, 24)   │ Memory Pointer │
+/// │ [24, 256) │ Length of Item │
+/// └───────────┴────────────────┘
+type RLPItem is bytes32;
+
+/// @notice RLP item types.
+/// @custom:value DATA_ITEM Represents an RLP data item (NOT a list).
+/// @custom:value LIST_ITEM Represents an RLP list item.
+enum RLPItemType {
+    DATA_ITEM,
+    LIST_ITEM
 }
