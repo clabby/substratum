@@ -53,6 +53,8 @@ contract LibHashing_Test is Test {
         // Check that the free memory pointer has been properly updated to account for the newly allocated memory.
         // The new pointer should be equal to the old pointer plus the size of the abi-encoded withdrawal transaction
         // in memory.
-        assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr) + 0xE0 + TestArithmetic.roundUpTo32(_tx.data.length));
+        assertEq(
+            MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr) + 0xE0 + TestArithmetic.roundUpTo32(_tx.data.length)
+        );
     }
 }

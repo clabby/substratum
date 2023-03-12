@@ -52,7 +52,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md).
 - [ ] [`SafeCall.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/SafeCall.sol)
 - [x] [`Types.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Types.sol)
 - **RLP:**
-    - [ ] [`RLPReader.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/rlp/RLPReader.sol)
+    - [x] [`RLPReader.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/rlp/RLPReader.sol)
     - [ ] [`RLPWriter.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/rlp/RLPWriter.sol)
 - **Trie (? - Might not be worth with Claim-based withdrawals around the corner.)**
     - [ ] [`MerkleTrie.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/trie/MerkleTrie.sol)

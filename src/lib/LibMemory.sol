@@ -12,9 +12,9 @@ library LibMemory {
     /// @param _offset Offset to start reading from.
     /// @param _length Number of bytes to read.
     /// @return _out Copied bytes.
-    // TODO: The identity precompile may be more efficient here for large lengths.
+    // TODO: The identity precompile may be more efficient here for large lengths. Run some comparisons.
     function mcopy(MemoryPointer _src, uint256 _offset, uint256 _length) internal pure returns (bytes memory _out) {
-        assembly {
+        assembly ("memory-safe") {
             switch _length
             case 0x00 {
                 // Assign `_out` to the zero offset

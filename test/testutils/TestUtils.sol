@@ -9,7 +9,7 @@ library TestUtils {
     /// @notice Gets the free memory pointer
     /// @return _ptr The free memory pointer
     function getFreeMemoryPtr() internal pure returns (MemoryPointer _ptr) {
-        assembly {
+        assembly ("memory-safe") {
             _ptr := mload(0x40)
         }
     }

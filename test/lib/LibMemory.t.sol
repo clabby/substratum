@@ -13,7 +13,7 @@ contract LibMemory_Test is Test {
     /// @dev Tests that `mcopy` correctly copies a given memory region.
     function test_mcopy_correctness_succeeds(bytes memory _in) public {
         MemoryPointer inPtr;
-        assembly {
+        assembly ("memory-safe") {
             inPtr := add(_in, 0x20)
         }
         bytes memory copied = LibMemory.mcopy(inPtr, 0, _in.length);
@@ -26,7 +26,7 @@ contract LibMemory_Test is Test {
     function test_mcopy_memorySafety_succeeds(bytes memory _in) public {
         MemoryPointer ptr = TestUtils.getFreeMemoryPtr();
         MemoryPointer inPtr;
-        assembly {
+        assembly ("memory-safe") {
             inPtr := add(_in, 0x20)
         }
         LibMemory.mcopy(inPtr, 0, _in.length);
@@ -34,7 +34,9 @@ contract LibMemory_Test is Test {
 
         // New memory should be allocated if the input length is non-zero.
         if (_in.length > 0) {
-            assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_in.length));
+            assertEq(
+                MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_in.length)
+            );
         } else {
             assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr));
         }

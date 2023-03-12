@@ -44,7 +44,9 @@ contract LibBytes_Test is Test {
         // Check that the free memory pointer has been properly updated to account for the newly allocated memory.
         // Note that new memory is only allocated if the slice length is non-zero.
         if (_length > 0) {
-            assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_length));
+            assertEq(
+                MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_length)
+            );
         } else {
             assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr));
         }

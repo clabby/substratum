@@ -4,11 +4,11 @@ pragma solidity ^0.8.19;
 import "src/types/Types.sol";
 import { LibMemory } from "src/lib/LibMemory.sol";
 
-/// @custom:attribution https://github.com/hamdiallam/Solidity-RLP
 /// @title RLPReader
 /// @notice RLPReader is a library for parsing RLP-encoded byte arrays into Solidity types. Adapted
 ///         from Solidity-RLP (https://github.com/hamdiallam/Solidity-RLP) by Hamdi Allam with
 ///         various tweaks to improve gas efficiency and readability.
+/// @custom:attribution https://github.com/hamdiallam/Solidity-RLP
 library RLPReader {
     ////////////////////////////////////////////////////////////////
     //                         CONSTANTS                          //
@@ -26,7 +26,7 @@ library RLPReader {
     /// @param _len The length of the item.
     /// @return _item The RLPItem.
     function wrapRLPItem(MemoryPointer _ptr, uint232 _len) internal pure returns (RLPItem _item) {
-        assembly {
+        assembly ("memory-safe") {
             _item := or(shl(0xE8, _ptr), _len)
         }
     }
@@ -36,7 +36,7 @@ library RLPReader {
     /// @return _ptr The memory pointer.
     /// @return _len The length of the item.
     function unwrapRLPItem(RLPItem _item) internal pure returns (MemoryPointer _ptr, uint232 _len) {
-        assembly {
+        assembly ("memory-safe") {
             // The pointer is the 24-bit value in the high-order 24 bits of the item.
             _ptr := shr(0xE8, _item)
             // Clean high-order 24 bits from the item to receive the 232 bit length
@@ -50,7 +50,7 @@ library RLPReader {
     function toRLPItem(bytes memory _in) internal pure returns (RLPItem _rlpItem) {
         MemoryPointer ptr;
         uint232 inLen;
-        assembly {
+        assembly ("memory-safe") {
             ptr := add(_in, 0x20)
             inLen := mload(_in)
 
@@ -77,7 +77,7 @@ library RLPReader {
         (MemoryPointer inPtr, uint240 inLen) = unwrapRLPItem(_in);
         MemoryPointer listDataOffset;
 
-        assembly {
+        assembly ("memory-safe") {
             // Assertion: itemType == RLPItemType.LIST_ITEM
             if iszero(eq(itemType, 0x01)) {
                 // Store the "RLPNotAList()" selector in scratch space.
@@ -100,14 +100,12 @@ library RLPReader {
 
         // Loop variables
         uint256 itemCount = 0;
-        uint256 offset = listOffset;
-
-        while (offset < inLen) {
-            MemoryPointer itemPtr = MemoryPointer.wrap(uint24(MemoryPointer.unwrap(inPtr) + offset));
-            (uint256 itemOffset, uint256 itemLength,) = _decodeLength(wrapRLPItem(itemPtr, uint232(inLen - offset)));
+        while (listOffset < inLen) {
+            MemoryPointer itemPtr = MemoryPointer.wrap(uint24(MemoryPointer.unwrap(inPtr) + listOffset));
+            (uint256 itemOffset, uint256 itemLength,) = _decodeLength(wrapRLPItem(itemPtr, uint232(inLen - listOffset)));
             RLPItem inner = wrapRLPItem(itemPtr, uint232(itemLength + itemOffset));
 
-            assembly {
+            assembly ("memory-safe") {
                 // Assertion: itemCount <= MAX_LIST_INDEX
                 if gt(itemCount, MAX_LIST_INDEX) {
                     // Store the "RLPListTooLong()" selector in scratch space.
@@ -122,11 +120,11 @@ library RLPReader {
                 // Increment the item count
                 itemCount := add(itemCount, 0x01)
                 // Increment the offset by the full length of the RLP Item
-                offset := add(offset, add(itemOffset, itemLength))
+                listOffset := add(listOffset, add(itemOffset, itemLength))
             }
         }
 
-        assembly {
+        assembly ("memory-safe") {
             // Set the length of the list
             mstore(_list, itemCount)
             // Update the free memory pointer
@@ -148,7 +146,7 @@ library RLPReader {
         (uint256 itemOffset, uint256 itemLength, RLPItemType itemType) = _decodeLength(_in);
         (MemoryPointer inPtr, uint240 inLen) = unwrapRLPItem(_in);
 
-        assembly {
+        assembly ("memory-safe") {
             // Assertion: itemType == RLPItemType.DATA_ITEM
             if gt(itemType, 0x00) {
                 // Store the "RLPNotABytes()" selector in scratch space.
@@ -193,7 +191,7 @@ library RLPReader {
     /// @return _type RLP item type (LIST_ITEM or DATA_ITEM).
     function _decodeLength(RLPItem _in) private pure returns (uint256 _offset, uint256 _length, RLPItemType _type) {
         (MemoryPointer inPtr, uint232 inLen) = unwrapRLPItem(_in);
-        assembly {
+        assembly ("memory-safe") {
             /// @dev Shorthand for reverting with a selector.
             function revertWithSelector(selector) {
                 // Store selector in scratch space.
@@ -239,11 +237,8 @@ library RLPReader {
                         revertWithSelector(0x03cbee18)
                     }
 
-                    // Grab the first byte of the RLP item
-                    let firstByte := byte(0x01, mload(inPtr))
-
                     // Assertion: _length != 0x01 || firstByte >= 0x80
-                    if and(eq(0x01, _length), lt(firstByte, 0x80)) {
+                    if and(eq(0x01, _length), lt(byte(0x01, mload(inPtr)), 0x80)) {
                         // Revert with the "RLPInvalidPrefix()" selector.
                         revertWithSelector(0x7f0fdb83)
                     }
@@ -262,11 +257,8 @@ library RLPReader {
                             revertWithSelector(0x03cbee18)
                         }
 
-                        // Grab the first byte of the RLP item
-                        let firstByte := byte(0x01, mload(inPtr))
-
                         // Assertion: firstByte != 0
-                        if iszero(firstByte) {
+                        if iszero(byte(0x01, mload(inPtr))) {
                             // Revert with the "RLPNoLeadingZeros()" selector.
                             revertWithSelector(0xc0b6f8d9)
                         }
@@ -310,11 +302,8 @@ library RLPReader {
                                 revertWithSelector(0x03cbee18)
                             }
 
-                            // Get the first byte of the RLP item
-                            let firstByte := byte(0x01, mload(inPtr))
-
                             // Assertion: firstByte != 0
-                            if iszero(firstByte) {
+                            if iszero(byte(0x01, mload(inPtr))) {
                                 // Revert with the "RLPNoLeadingZeros()" selector.
                                 revertWithSelector(0xc0b6f8d9)
                             }
