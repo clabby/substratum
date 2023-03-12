@@ -2,24 +2,32 @@
 
 # substratum • [![tests](https://github.com/clabby/substratum/actions/workflows/test.yml/badge.svg?label=tests)](https://github.com/clabby/substratum/actions/workflows/test.yml) ![license](https://img.shields.io/github/license/clabby/substratum?label=license)
 
-`substratum` is an opinionated, spec-compliant, optimized version of Optimism's [contracts-bedrock](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock) package.
+> **Note**
+> This project will be developed during my free time, so expect progress to be slow. See [TODO](#TODO) for the current status. [Contributions are welcome](./CONTRIBUTING.md), and feel free to reach out if you're interested!
+
+`substratum` seeks to be an opinionated, spec-compliant, optimized version of Optimism's [contracts-bedrock](https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock) package.
 
 **High-level goals**
 - :broom: Clean up tech debt in `contracts-bedrock`
 - :zap: Optimize
-    - :heavy_dollar_sign: Support a custom calldata encoding scheme, with legacy support for ABI-encoder-V2 style calldata in the fallbacks.
 - :test_tube: Have higher test coverage than `contracts-bedrock`
     - :balance_scale: Differential test this implementation against `contracts-bedrock`
-    - :hammer_and_wrench: Favor forge invariants over Echidna.
+    - :crab: Rewrite periphery differential testing scripts / fuzz input generators in Rust.
+    - :hammer_and_wrench: Favor forge invariants over Echidna. Echidna will be used for long-term fuzzing campaigns in the future.
+    - :classical_building: Use halmos for properties that can benefit from bounded symbolic execution.
+    - :radioactive: Use pyrometer for bound / taint analysis.
 - :scroll: Improve documentation (`forge doc`)
 - :bomb: Nuke OZ from the Optimism contracts codebase.
     - :house_with_garden: Also trim other dependencies in favor of in-house contracts.
 - :bangbang: Move to custom errors.
 - :dizzy: Use custom types for values such as hashes, gas limits, timestamps, balances, etc.
-- :package: Support legacy contract storage layouts, but refactor for new slots going forward.
+- :package: Support legacy contract storage layouts, but support a cleaner upgrade scheme going forward.
 
 ## Contributing
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## License
+`substratum` is and will always be [MIT Licensed](./LICENSE.md).
 
 ## TODO
 
@@ -33,12 +41,12 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md).
 - [ ] [`Arithmetic.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Arithmetic.sol)
 - [ ] [`Bytes.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Bytes.sol)
 - [ ] [`Burn.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Burn.sol)
-- [ ] [`Constants.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Constants.sol)
+- [x] [`Constants.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Constants.sol)
 - [ ] [`Encoding.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Encoding.sol)
     - Depends on: `Hashing.sol` & `RLPWriter.sol`
 - [ ] [`Hashing.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Hashing.sol)
     - Depends on: `Encoding.sol`
-- [ ] [`Predeploys.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Predeploys.sol)
+- [x] [`Predeploys.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Predeploys.sol)
 - [ ] [`SafeCall.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/SafeCall.sol)
 - [x] [`Types.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Types.sol)
 - **RLP:**

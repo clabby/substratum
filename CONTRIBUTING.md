@@ -4,6 +4,17 @@ First of all, thank you for wanting to contribute :heart: Any and all contributo
 
 Before creating a PR, please make sure you've read this short document.
 
+### Feature Parity with `contracts-bedrock`
+
+As `substratum` is not the canonical implementation of the Bedrock contracts, the initial goal is to reach parity with
+the behavior of `contracts-bedrock`. Because `contracts-bedrock` is in active development, this unfortunately makes for
+a moving target, but this should be easier to deal with once the implementation reaches maturity.
+
+### Security
+
+Due to the above, any divergence in the behavior of `substratum`'s contracts from their counterparts in `contracts-bedrock` is 
+**considered a *high-severity* bug**.
+
 ## Pull Request Process
 
 **Pre-flight checklist**
