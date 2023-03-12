@@ -8,6 +8,40 @@ import { RLPReader } from "src/lib/rlp/RLPReader.sol";
 import "src/types/Types.sol";
 import "src/types/Errors.sol";
 
+/// @notice Tests for the RLPReader library's RLPItem type helpers
+contract RLPReader_RLPItemType_Test is Test {
+    /// @dev Tests that the `wrapRLPItem` and `unwrapRLPItem` functions work as expected.
+    function test_wrapUnwrapRLPItem_succeeds(MemoryPointer _ptr, uint232 _len) external {
+        RLPItem item = RLPReader.wrapRLPItem(_ptr, _len);
+        (MemoryPointer _unwrappedPtr, uint232 _unwrappedLen) = RLPReader.unwrapRLPItem(item);
+        assertEq(MemoryPointer.unwrap(_unwrappedPtr), MemoryPointer.unwrap(_ptr));
+        assertEq(_unwrappedLen, _len);
+    }
+
+    /// @dev Tests that the `toRLPItem` function works as expected.
+    function test_toRLPItem_succeeds(bytes memory _in) external {
+        // If the input is empty, expect a revert.
+        if (_in.length == 0) {
+            vm.expectRevert(RLPItemEmpty.selector);
+        }
+
+        // Convert the `_in` bytes to an RLPItem type.
+        RLPItem item = RLPReader.toRLPItem(_in);
+
+        // Grab the pointer and length of the `_in` bytes.
+        MemoryPointer ptr;
+        assembly {
+            ptr := add(_in, 0x20)
+        }
+        uint232 len = uint232(_in.length);
+
+        // Check that the pointer and length of the RLPItem match the pointer and length of the input.
+        (MemoryPointer _unwrappedPtr, uint232 _unwrappedLen) = RLPReader.unwrapRLPItem(item);
+        assertEq(MemoryPointer.unwrap(_unwrappedPtr), MemoryPointer.unwrap(ptr));
+        assertEq(_unwrappedLen, len);
+    }
+}
+
 /// @notice Tests for the RLPReader library's `readBytes` function.
 contract RLPReader_readBytes_Test is Test {
     /// @dev Tests that the `readBytes` function returns the correct value for
