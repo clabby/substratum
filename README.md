@@ -14,6 +14,7 @@
     - :balance_scale: Differential test this implementation against `contracts-bedrock`
     - :crab: Rewrite periphery differential testing scripts / fuzz input generators in Rust.
     - :hammer_and_wrench: Favor forge invariants over Echidna. Echidna will be used for long-term fuzzing campaigns in the future.
+        - :rock: Further define plain-english invariants, and when possible, write accompanying invariant tests.
     - :classical_building: Use halmos for properties that can benefit from bounded symbolic execution.
     - :radioactive: Use pyrometer for bound / taint analysis.
 - :scroll: Improve documentation (`forge doc`)
@@ -22,6 +23,7 @@
 - :bangbang: Move to custom errors.
 - :dizzy: Use custom types for values such as hashes, gas limits, timestamps, balances, etc.
 - :package: Support legacy contract storage layouts, but support a cleaner upgrade scheme going forward.
+- :pancakes: Improve modularity of existing contracts.
 
 ## Contributing
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
@@ -68,7 +70,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md).
 **Stage 5: Deployment Contracts**
 *TODO*
 
-**Stage 6: Rewrite test scripts in Go**
+**Stage 6: Rewrite test scripts in Rust**
 *TODO*
 
 

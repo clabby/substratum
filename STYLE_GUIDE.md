@@ -1,6 +1,7 @@
 # Style Guide
 
-*TODO*
+> **Note**  
+> WIP - Subject to change.
 
 ## Formatting
 
@@ -60,6 +61,13 @@ function good() external pure {}
  */
 function bad() external pure {}
 ```
+
+### Inline Assembly
+
+We're all for inline assembly. That said, the purpose of the code should be clearly documented and as readable as possible.
+Feel free to get creative, but `// what the fuck?` is not a good descriptor for a clever bit twiddling operation 
+(Sorry John Carmack, you're still a legend :heart:). For a good example of well-documented, clean inline assembly code,
+see [Solady](https://github.com/Vectorized/solady/tree/main).
 
 ## Section Headers
 

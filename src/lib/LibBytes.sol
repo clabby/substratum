@@ -13,7 +13,7 @@ library LibBytes {
     /// @param _length Length of the slice.
     /// @return _slice Slice of the input byte array.
     function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal view returns (bytes memory _slice) {
-        assembly {
+        assembly ("memory-safe") {
             // Assertions:
             // - _length + 31 >= _length
             // - _start + _length >= _start
@@ -54,12 +54,17 @@ library LibBytes {
     ///         array. Returns a new array rathern than a pointer to the original.
     /// @param _bytes Byte array to slice.
     /// @param _start Starting index of the slice.
-    /// @return Slice of the input byte array.
-    function slice(bytes memory _bytes, uint256 _start) internal view returns (bytes memory) {
-        if (_start >= _bytes.length) {
-            return bytes("");
+    /// @return _slice Slice of the input byte array.
+    function slice(bytes memory _bytes, uint256 _start) internal view returns (bytes memory _slice) {
+        uint256 length = _bytes.length;
+        if (_start >= length) {
+            assembly ("memory-safe") {
+                // Return a zero-length slice
+                _slice := 0x60
+            }
+            return _slice;
         }
-        return slice(_bytes, _start, _bytes.length - _start);
+        _slice = slice(_bytes, _start, length - _start);
     }
 
     /// @notice Converts a byte array into a nibble array by splitting each byte into two nibbles.
@@ -114,6 +119,8 @@ library LibBytes {
     /// @return _eq True if the two byte arrays are equal, false otherwise.
     function equal(bytes memory _a, bytes memory _b) internal pure returns (bool _eq) {
         assembly ("memory-safe") {
+            // Hash the first and second byte arrays (including the length offset) and check
+            // for equality.
             _eq := eq(keccak256(_a, add(mload(_a), 0x20)), keccak256(_b, add(mload(_b), 0x20)))
         }
     }
