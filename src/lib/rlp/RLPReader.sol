@@ -2,17 +2,24 @@
 pragma solidity ^0.8.19;
 
 import "src/types/Types.sol";
+import { LibMemory } from "src/lib/LibMemory.sol";
 
-/**
- * @custom:attribution https://github.com/hamdiallam/Solidity-RLP
- * @title RLPReader
- * @notice RLPReader is a library for parsing RLP-encoded byte arrays into Solidity types. Adapted
- *         from Solidity-RLP (https://github.com/hamdiallam/Solidity-RLP) by Hamdi Allam with
- *         various tweaks to improve readability.
- */
+/// @custom:attribution https://github.com/hamdiallam/Solidity-RLP
+/// @title RLPReader
+/// @notice RLPReader is a library for parsing RLP-encoded byte arrays into Solidity types. Adapted
+///         from Solidity-RLP (https://github.com/hamdiallam/Solidity-RLP) by Hamdi Allam with
+///         various tweaks to improve gas efficiency and readability.
 library RLPReader {
-    /// @notice Max list length that this library will accept.
-    uint256 internal constant MAX_LIST_LENGTH = 32;
+    ////////////////////////////////////////////////////////////////
+    //                         CONSTANTS                          //
+    ////////////////////////////////////////////////////////////////
+
+    /// @notice Max list index that this library will accept.
+    uint256 internal constant MAX_LIST_INDEX = 31;
+
+    ////////////////////////////////////////////////////////////////
+    //                    RLPItem Type Helpers                    //
+    ////////////////////////////////////////////////////////////////
 
     /// @notice Wraps a memory pointer and length into an RLPItem type.
     /// @param _ptr The memory pointer.
@@ -47,6 +54,7 @@ library RLPReader {
             ptr := add(_in, 0x20)
             inLen := mload(_in)
 
+            // Assertion: inLen != 0
             if iszero(inLen) {
                 // Store "RLPItemEmpty()" selector in scratch space.
                 mstore(0x00, 0xe2ad24d9)
@@ -56,6 +64,10 @@ library RLPReader {
         }
         return wrapRLPItem(ptr, inLen);
     }
+
+    ////////////////////////////////////////////////////////////////
+    //                  RLPReader Functionality                   //
+    ////////////////////////////////////////////////////////////////
 
     /// @notice Reads an RLP list value into a list of RLP items.
     /// @param _in RLP list value.
@@ -86,28 +98,30 @@ library RLPReader {
             listDataOffset := add(_list, 0x20)
         }
 
+        // Loop variables
         uint256 itemCount = 0;
         uint256 offset = listOffset;
+
         while (offset < inLen) {
-            (uint256 itemOffset, uint256 itemLength,) = _decodeLength(
-                wrapRLPItem(MemoryPointer.wrap(uint24(MemoryPointer.unwrap(inPtr) + offset)), uint232(inLen - offset))
-            );
-            RLPItem inner = wrapRLPItem(
-                MemoryPointer.wrap(uint24(MemoryPointer.unwrap(inPtr) + offset)), uint232(itemLength + itemOffset)
-            );
+            MemoryPointer itemPtr = MemoryPointer.wrap(uint24(MemoryPointer.unwrap(inPtr) + offset));
+            (uint256 itemOffset, uint256 itemLength,) = _decodeLength(wrapRLPItem(itemPtr, uint232(inLen - offset)));
+            RLPItem inner = wrapRLPItem(itemPtr, uint232(itemLength + itemOffset));
 
             assembly {
-                // Assertion: itemCount < MAX_LIST_LENGTH
-                if gt(itemCount, 0x1F) {
+                // Assertion: itemCount <= MAX_LIST_INDEX
+                if gt(itemCount, MAX_LIST_INDEX) {
                     // Store the "RLPListTooLong()" selector in scratch space.
                     mstore(0x00, 0x879dcbe3)
                     // Revert
                     revert(0x1c, 0x04)
                 }
 
+                // Store the RLPItem in the list
                 mstore(add(listDataOffset, shl(0x05, itemCount)), inner)
 
+                // Increment the item count
                 itemCount := add(itemCount, 0x01)
+                // Increment the offset by the full length of the RLP Item
                 offset := add(offset, add(itemOffset, itemLength))
             }
         }
@@ -120,56 +134,56 @@ library RLPReader {
         }
     }
 
-    /**
-     * @notice Reads an RLP list value into a list of RLP items.
-     *
-     * @param _in RLP list value.
-     *
-     * @return Decoded RLP list items.
-     */
-    function readList(bytes memory _in) internal pure returns (RLPItem[] memory) {
+    /// @notice Reads an RLP list value into a list of RLP items.
+    /// @param _in RLP list value.
+    /// @return _list Decoded RLP list items.
+    function readList(bytes memory _in) internal pure returns (RLPItem[] memory _list) {
         return readList(toRLPItem(_in));
     }
 
-    /**
-     * @notice Reads an RLP bytes value into bytes.
-     *
-     * @param _in RLP bytes value.
-     *
-     * @return Decoded bytes.
-     */
-    function readBytes(RLPItem _in) internal pure returns (bytes memory) {
+    /// @notice Reads an RLP bytes value into bytes.
+    /// @param _in RLP bytes value.
+    /// @return _out Decoded bytes.
+    function readBytes(RLPItem _in) internal pure returns (bytes memory _out) {
         (uint256 itemOffset, uint256 itemLength, RLPItemType itemType) = _decodeLength(_in);
         (MemoryPointer inPtr, uint240 inLen) = unwrapRLPItem(_in);
 
-        require(itemType == RLPItemType.DATA_ITEM, "RLPReader: decoded item type for bytes is not a data item");
+        assembly {
+            // Assertion: itemType == RLPItemType.DATA_ITEM
+            if gt(itemType, 0x00) {
+                // Store the "RLPNotABytes()" selector in scratch space.
+                mstore(0x00, 0x2f6b05a2)
+                // Revert
+                revert(0x1c, 0x04)
+            }
 
-        require(inLen == itemOffset + itemLength, "RLPReader: bytes value contains an invalid remainder");
+            if iszero(eq(inLen, add(itemOffset, itemLength))) {
+                // Store the "RLPInvalidDataRemainder()" selector in scratch space.
+                mstore(0x00, 0xd552ec6e)
+                // Revert
+                revert(0x1c, 0x04)
+            }
+        }
 
-        return _copy(inPtr, itemOffset, itemLength);
+        // Copy the bytes within the RLP item
+        return LibMemory.mcopy(inPtr, itemOffset, itemLength);
     }
 
-    /**
-     * @notice Reads an RLP bytes value into bytes.
-     *
-     * @param _in RLP bytes value.
-     *
-     * @return Decoded bytes.
-     */
-    function readBytes(bytes memory _in) internal pure returns (bytes memory) {
+    /// @notice Reads an RLP bytes value into bytes.
+    /// @param _in RLP bytes value.
+    /// @return _bytes Decoded bytes.
+    function readBytes(bytes memory _in) internal pure returns (bytes memory _bytes) {
         return readBytes(toRLPItem(_in));
     }
 
-    /**
-     * @notice Reads the raw bytes of an RLP item.
-     *
-     * @param _in RLP item to read.
-     *
-     * @return Raw RLP bytes.
-     */
-    function readRawBytes(RLPItem _in) internal pure returns (bytes memory) {
+    /// @notice Reads the raw bytes of an RLP item.
+    /// @param _in RLP item to read.
+    /// @return _out Raw RLP bytes.
+    function readRawBytes(RLPItem _in) internal pure returns (bytes memory _out) {
         (MemoryPointer inPtr, uint240 inLen) = unwrapRLPItem(_in);
-        return _copy(inPtr, 0, inLen);
+
+        // Copy the bytes within the RLP item
+        return LibMemory.mcopy(inPtr, 0, inLen);
     }
 
     /// @notice Decodes the length of an RLP item.
@@ -322,31 +336,5 @@ library RLPReader {
                 }
             }
         }
-    }
-
-    /// @notice Copies the bytes from a memory location.
-    /// @param _src    Pointer to the location to read from.
-    /// @param _offset Offset to start reading from.
-    /// @param _length Number of bytes to read.
-    /// @return Copied bytes.
-    function _copy(MemoryPointer _src, uint256 _offset, uint256 _length) private pure returns (bytes memory) {
-        bytes memory out = new bytes(_length);
-        if (_length == 0) {
-            return out;
-        }
-
-        // Mostly based on Solidity's copy_memory_to_memory:
-        // solhint-disable max-line-length
-        // https://github.com/ethereum/solidity/blob/34dd30d71b4da730488be72ff6af7083cf2a91f6/libsolidity/codegen/YulUtilFunctions.cpp#L102-L114
-        uint256 src = MemoryPointer.unwrap(_src) + _offset;
-        assembly {
-            let dest := add(out, 32)
-            let i := 0
-            for { } lt(i, _length) { i := add(i, 32) } { mstore(add(dest, i), mload(add(src, i))) }
-
-            if gt(i, _length) { mstore(add(dest, _length), 0) }
-        }
-
-        return out;
     }
 }

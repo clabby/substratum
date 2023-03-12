@@ -42,17 +42,17 @@ contract LibHashing_Test is Test {
     /// @dev Tests that `LibHashing`'s `hash` function is memory-safe.
     function testFuzz_hashWithdrawalTransaction_memorySafety_succeeds(WithdrawalTransaction memory _tx) public {
         // Grab the free memory pointer before the operation.
-        uint256 ptr = TestUtils.getFreeMemoryPtr();
+        MemoryPointer ptr = TestUtils.getFreeMemoryPtr();
 
         // Hash the withdrawal transaction.
         _tx.hash();
 
         // Grab the free memory pointer after the operation.
-        uint256 newPtr = TestUtils.getFreeMemoryPtr();
+        MemoryPointer newPtr = TestUtils.getFreeMemoryPtr();
 
         // Check that the free memory pointer has been properly updated to account for the newly allocated memory.
         // The new pointer should be equal to the old pointer plus the size of the abi-encoded withdrawal transaction
         // in memory.
-        assertEq(newPtr, ptr + 0xE0 + TestArithmetic.roundUpTo32(_tx.data.length));
+        assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr) + 0xE0 + TestArithmetic.roundUpTo32(_tx.data.length));
     }
 }

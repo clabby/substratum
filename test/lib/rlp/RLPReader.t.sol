@@ -6,55 +6,73 @@ import { RLPReader } from "src/lib/rlp/RLPReader.sol";
 import "src/types/Types.sol";
 import "src/types/Errors.sol";
 
+/// @notice Tests for the RLPReader library's `readBytes` function.
 contract RLPReader_readBytes_Test is Test {
-    function test_type_wrap_succeeds() external {
-        emit log_bytes32(RLPItem.unwrap(RLPReader.wrapRLPItem(MemoryPointer.wrap(type(uint24).max), type(uint32).max)));
-    }
-
+    /// @dev Tests that the `readBytes` function returns the correct value for
+    ///      a "00" byte string.
     function test_readBytes_bytestring00_succeeds() external {
         assertEq(RLPReader.readBytes(hex"00"), hex"00");
     }
 
+    /// @dev Tests that the `readBytes` function returns the correct value for
+    ///      a "01" byte string.
     function test_readBytes_bytestring01_succeeds() external {
         assertEq(RLPReader.readBytes(hex"01"), hex"01");
     }
 
+    /// @dev Tests that the `readBytes` function returns the correct value for
+    ///      a "7f" byte string.
     function test_readBytes_bytestring7f_succeeds() external {
         assertEq(RLPReader.readBytes(hex"7f"), hex"7f");
     }
 
+    /// @dev Tests that the `readBytes` function reverts if it is passed an
+    ///      RLPItem that is not a data item.
     function test_readBytes_revertListItem_reverts() external {
-        vm.expectRevert("RLPReader: decoded item type for bytes is not a data item");
+        vm.expectRevert(RLPNotADataItem.selector);
         RLPReader.readBytes(hex"c7c0c1c0c3c0c1c0");
     }
 
+    /// @dev Tests that the `readBytes` function reverts if it is passed an
+    ///      RLPItem that has an invalid string length.
     function test_readBytes_invalidStringLength_reverts() external {
         vm.expectRevert(RLPInvalidContentLength.selector);
         RLPReader.readBytes(hex"b9");
     }
 
+    /// @dev Tests that the `readBytes` function reverts if it is passed an
+    ///      RLPItem that has an invalid list length.
     function test_readBytes_invalidListLength_reverts() external {
         vm.expectRevert(RLPInvalidContentLength.selector);
         RLPReader.readBytes(hex"ff");
     }
 
+    /// @dev Tests that the `readBytes` function reverts if it is passed an
+    ///      RLPItem that has an invalid data remainder.
     function test_readBytes_invalidRemainder_reverts() external {
-        vm.expectRevert("RLPReader: bytes value contains an invalid remainder");
+        vm.expectRevert(RLPInvalidDataRemainder.selector);
         RLPReader.readBytes(hex"800a");
     }
 
+    /// @dev Tests that the `readBytes` function reverts if it is passed an
+    ///      RLPItem that has an invalid prefix.
     function test_readBytes_invalidPrefix_reverts() external {
         vm.expectRevert(RLPInvalidPrefix.selector);
         RLPReader.readBytes(hex"810a");
     }
 }
 
+/// @notice Tests for the RLPReader library's `readList` function.
 contract RLPReader_readList_Test is Test {
+    /// @dev Tests that the `readList` function returns the correct value for
+    ///      an empty list.
     function test_readList_empty_succeeds() external {
         RLPItem[] memory list = RLPReader.readList(hex"c0");
         assertEq(list.length, 0);
     }
 
+    /// @dev Tests that the `readList` function returns the correct value for
+    ///      a list with multiple items.
     function test_readList_multiList_succeeds() external {
         RLPItem[] memory list = RLPReader.readList(hex"c6827a77c10401");
         assertEq(list.length, 3);
@@ -64,6 +82,8 @@ contract RLPReader_readList_Test is Test {
         assertEq(RLPReader.readRawBytes(list[2]), hex"01");
     }
 
+    /// @dev Tests that the `readList` function returns the correct value for
+    ///      a short list with 11 items.
     function test_readList_shortListMax1_succeeds() external {
         RLPItem[] memory list = RLPReader.readList(
             hex"f784617364668471776572847a78637684617364668471776572847a78637684617364668471776572847a78637684617364668471776572"
@@ -83,6 +103,8 @@ contract RLPReader_readList_Test is Test {
         assertEq(RLPReader.readRawBytes(list[10]), hex"8471776572");
     }
 
+    /// @dev Tests that the `readList` function returns the correct value for
+    ///      a long list with 4 items.
     function test_readList_longList1_succeeds() external {
         RLPItem[] memory list = RLPReader.readList(
             hex"f840cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376"
@@ -95,6 +117,8 @@ contract RLPReader_readList_Test is Test {
         assertEq(RLPReader.readRawBytes(list[3]), hex"cf84617364668471776572847a786376");
     }
 
+    /// @dev Tests that the `readList` function returns the correct value for
+    ///      a long list with 32 items.
     function test_readList_longList2_succeeds() external {
         RLPItem[] memory list = RLPReader.readList(
             hex"f90200cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376"
@@ -106,11 +130,15 @@ contract RLPReader_readList_Test is Test {
         }
     }
 
+    /// @dev Tests that the `readList` function reverts when the list is longer
+    ///      than 32 items.
     function test_readList_listLongerThan32Elements_reverts() external {
         vm.expectRevert(RLPListTooLong.selector);
         RLPReader.readList(hex"e1454545454545454545454545454545454545454545454545454545454545454545");
     }
 
+    /// @dev Tests that the `readList` function returns the correct value when
+    ///      passed a list of lists.
     function test_readList_listOfLists_succeeds() external {
         RLPItem[] memory list = RLPReader.readList(hex"c4c2c0c0c0");
         assertEq(list.length, 2);
@@ -118,6 +146,8 @@ contract RLPReader_readList_Test is Test {
         assertEq(RLPReader.readRawBytes(list[1]), hex"c0");
     }
 
+    /// @dev Tests that the `readList` function returns the correct value when
+    ///      passed a list of lists.
     function test_readList_listOfLists2_succeeds() external {
         RLPItem[] memory list = RLPReader.readList(hex"c7c0c1c0c3c0c1c0");
         assertEq(list.length, 3);
@@ -139,21 +169,28 @@ contract RLPReader_readList_Test is Test {
         assertEq(RLPReader.readRawBytes(list[3]), hex"ca846b6579348476616c34");
     }
 
+    /// @dev Tests that the `readList` function reverts when passed a short list
+    ///      with an invalid content length.
     function test_readList_invalidShortList_reverts() external {
         vm.expectRevert(RLPInvalidContentLength.selector);
         RLPReader.readList(hex"efdebd");
     }
 
+    /// @dev Tests that the `readList` function reverts when passed a long string
+    ///      with an invalid content length.
     function test_readList_longStringLength_reverts() external {
         vm.expectRevert(RLPInvalidContentLength.selector);
         RLPReader.readList(hex"efb83600");
     }
 
+    /// @dev Tests that the `readList` function reverts when passed a list that is
+    ///      not long enough.
     function test_readList_notLongEnough_reverts() external {
         vm.expectRevert(RLPInvalidContentLength.selector);
         RLPReader.readList(hex"efdebdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     }
 
+    /// @dev Tests that the `readList` function reverts when passed a list that is
     function test_readList_int32Overflow_reverts() external {
         vm.expectRevert(RLPInvalidContentLength.selector);
         RLPReader.readList(hex"bf0f000000000000021111");

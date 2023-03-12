@@ -33,20 +33,20 @@ contract LibBytes_Test is Test {
         _length = bound(_length, 0, TestArithmetic.saturatingSub(_bytes.length, _start));
 
         // Grab the free memory pointer prior to slicing
-        uint256 ptr = TestUtils.getFreeMemoryPtr();
+        MemoryPointer ptr = TestUtils.getFreeMemoryPtr();
 
         // Perform a slice
         LibBytes.slice(_bytes, _start, _length);
 
         // Grab the free memory pointer after the slice
-        uint256 newPtr = TestUtils.getFreeMemoryPtr();
+        MemoryPointer newPtr = TestUtils.getFreeMemoryPtr();
 
         // Check that the free memory pointer has been properly updated to account for the newly allocated memory.
         // Note that new memory is only allocated if the slice length is non-zero.
         if (_length > 0) {
-            assertEq(newPtr, ptr + 0x20 + TestArithmetic.roundUpTo32(_length));
+            assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_length));
         } else {
-            assertEq(newPtr, ptr);
+            assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(ptr));
         }
     }
 
