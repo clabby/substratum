@@ -14,7 +14,7 @@ library LibSafeCall {
         internal
         returns (bool _success)
     {
-        assembly {
+        assembly ("memory-safe") {
             _success :=
                 call(
                     _gas, // gas
