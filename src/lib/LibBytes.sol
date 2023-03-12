@@ -32,7 +32,10 @@ library LibBytes {
             }
 
             switch _length
-            case 0 { _slice := 0x60 }
+            case 0x00 {
+                // Assign `_slice` to the zero offset
+                _slice := 0x60
+            }
             default {
                 // Get a location of some free memory and store it in tempBytes as
                 // Solidity does for memory variables.
@@ -59,7 +62,7 @@ library LibBytes {
         uint256 length = _bytes.length;
         if (_start >= length) {
             assembly ("memory-safe") {
-                // Return a zero-length slice
+                // Assign `_slice` to the zero offset
                 _slice := 0x60
             }
             return _slice;

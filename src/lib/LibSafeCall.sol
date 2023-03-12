@@ -22,8 +22,8 @@ library LibSafeCall {
                     _value, // ether value
                     add(_calldata, 0x20), // input data location
                     mload(_calldata), // input length (bytes)
-                    0, // returndata location
-                    0 // returndata size
+                    0x00, // returndata location
+                    0x00 // returndata size
                 )
         }
     }

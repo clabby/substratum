@@ -69,6 +69,8 @@ Feel free to get creative, but `// what the fuck?` is not a good descriptor for 
 (Sorry John Carmack, you're still a legend :heart:). For a good example of well-documented, clean inline assembly code,
 see [Solady](https://github.com/Vectorized/solady/tree/main).
 
+1. Within inline assembly blocks, always use hexadecimal numbers.
+
 ## Section Headers
 
 Within a contract, the following ordering of elements should always be followed:
