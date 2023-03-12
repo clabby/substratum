@@ -17,3 +17,19 @@ error SliceOutOfBounds();
 
 /// @notice Thrown when attempting to call `toRLPItem` on an empty bytes array.
 error RLPItemEmpty();
+
+/// @notice Thrown when the length of an RLP item is too long to be represented
+///         by the content itself.
+error RLPInvalidContentLength();
+
+/// @notice Thrown when an invalid prefix for an RLPItem is encountered.
+error RLPInvalidPrefix();
+
+/// @notice Thrown when an RLP item has unexpected leading zeros.
+error RLPNoLeadingZeros();
+
+error RLPNotAList();
+
+error RLPInvalidDataRemainder();
+
+error RLPListTooLong();
