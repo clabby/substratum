@@ -30,6 +30,24 @@ contract_new_lines = false
     1. If the name of the library is one word long, use `LibName`.
     1. If the name of the library is more than one word long, use `LongNameLib`.
 
+## Constants & Immutables
+
+1. Constant and Immutable variable names are strictly `UPPER_SNAKE_CASE`.
+1. Constants and Immutables should always have a descriptor doc comment above them.
+1. Unless the value is being set in the constructor, always use a constant.
+1. If a constant is used widely across the codebase, place it in [`LibConstants.sol`](./src/lib/LibConstants.sol).
+
+**Example**
+```solidity
+/// @notice Tells us where the cafe is in transient storage
+uint256 internal constant MY_AWESOME_CONSTANT = 0xCAFE;
+/// @notice Address of the CafeFactory, set on deployment.
+address internal immutable MY_AWESOME_IMMUTABLE;
+
+uint256 internal constant myNotSoAwesomeConstant = 0xbadc0de;
+address internal immutable my_not_so_awesome_immutable = 0xbadc0de;
+```
+
 ## Functions
 
 1. Function names are strictly `camelCase`.  
