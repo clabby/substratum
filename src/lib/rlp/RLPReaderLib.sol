@@ -4,12 +4,12 @@ pragma solidity ^0.8.19;
 import "src/types/Types.sol";
 import { LibMemory } from "src/lib/LibMemory.sol";
 
-/// @title RLPReader
-/// @notice RLPReader is a library for parsing RLP-encoded byte arrays into Solidity types. Adapted
+/// @title RLPReaderLib
+/// @notice RLPReaderLib is a library for parsing RLP-encoded byte arrays into Solidity types. Adapted
 ///         from Solidity-RLP (https://github.com/hamdiallam/Solidity-RLP) by Hamdi Allam with
 ///         various tweaks to improve gas efficiency and readability.
 /// @custom:attribution https://github.com/hamdiallam/Solidity-RLP
-library RLPReader {
+library RLPReaderLib {
     ////////////////////////////////////////////////////////////////
     //                         CONSTANTS                          //
     ////////////////////////////////////////////////////////////////
