@@ -7,6 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "gen:header": "python3 scripts/section_header.py"
+    "gen:header": "python3 scripts/section_header.py",
+    "snapshot": "forge snapshot --no-match-test 'testFuzz|testDiff'"
   }
 }

@@ -15,7 +15,9 @@ library RLPReaderLib {
     ////////////////////////////////////////////////////////////////
 
     /// @notice Max list index that this library will accept.
-    uint256 internal constant MAX_LIST_INDEX = 31;
+    /// @dev The reason we use an offset here is to prevent an extra shift within the loop
+    ///      within `readList`
+    uint256 private constant MAX_LIST_INDEX_OFFSET = 31 * 32;
 
     ////////////////////////////////////////////////////////////////
     //                    RLPItem Type Helpers                    //
@@ -99,15 +101,15 @@ library RLPReaderLib {
         }
 
         // Loop variables
-        uint256 itemCount = 0;
+        uint256 totalOffset = 0;
         while (listOffset < inLen) {
             MemoryPointer itemPtr = MemoryPointer.wrap(uint24(MemoryPointer.unwrap(inPtr) + listOffset));
             (uint256 itemOffset, uint256 itemLength,) = _decodeLength(wrapRLPItem(itemPtr, uint232(inLen - listOffset)));
             RLPItem inner = wrapRLPItem(itemPtr, uint232(itemLength + itemOffset));
 
             assembly ("memory-safe") {
-                // Assertion: itemCount <= MAX_LIST_INDEX
-                if gt(itemCount, MAX_LIST_INDEX) {
+                // Assertion: totalOffset <= MAX_LIST_INDEX_OFFSET
+                if gt(totalOffset, MAX_LIST_INDEX_OFFSET) {
                     // Store the "RLPListTooLong()" selector in scratch space.
                     mstore(0x00, 0x879dcbe3)
                     // Revert
@@ -115,10 +117,10 @@ library RLPReaderLib {
                 }
 
                 // Store the RLPItem in the list
-                mstore(add(listDataOffset, shl(0x05, itemCount)), inner)
+                mstore(add(listDataOffset, totalOffset), inner)
 
-                // Increment the item count
-                itemCount := add(itemCount, 0x01)
+                // Increment the total offset
+                totalOffset := add(totalOffset, 0x20)
                 // Increment the offset by the full length of the RLP Item
                 listOffset := add(listOffset, add(itemOffset, itemLength))
             }
@@ -126,9 +128,9 @@ library RLPReaderLib {
 
         assembly ("memory-safe") {
             // Set the length of the list
-            mstore(_list, itemCount)
+            mstore(_list, shr(0x05, totalOffset))
             // Update the free memory pointer
-            mstore(0x40, add(listDataOffset, shl(0x05, itemCount)))
+            mstore(0x40, add(listDataOffset, totalOffset))
         }
     }
 

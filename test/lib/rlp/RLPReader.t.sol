@@ -11,7 +11,7 @@ import "src/types/Errors.sol";
 /// @notice Tests for the RLPReaderLib.library's RLPItem type helpers
 contract RLPReaderLib_RLPItemType_Test is Test {
     /// @dev Tests that the `wrapRLPItem` and `unwrapRLPItem` functions work as expected.
-    function test_wrapUnwrapRLPItem_succeeds(MemoryPointer _ptr, uint232 _len) external {
+    function testFuzz_wrapUnwrapRLPItem_succeeds(MemoryPointer _ptr, uint232 _len) external {
         RLPItem item = RLPReaderLib.wrapRLPItem(_ptr, _len);
         (MemoryPointer _unwrappedPtr, uint232 _unwrappedLen) = RLPReaderLib.unwrapRLPItem(item);
         assertEq(MemoryPointer.unwrap(_unwrappedPtr), MemoryPointer.unwrap(_ptr));
@@ -19,7 +19,7 @@ contract RLPReaderLib_RLPItemType_Test is Test {
     }
 
     /// @dev Tests that the `toRLPItem` function works as expected.
-    function test_toRLPItem_succeeds(bytes memory _in) external {
+    function testFuzz_toRLPItem_succeeds(bytes memory _in) external {
         // If the input is empty, expect a revert.
         if (_in.length == 0) {
             vm.expectRevert(RLPItemEmpty.selector);
