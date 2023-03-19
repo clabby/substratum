@@ -59,7 +59,8 @@ contract LibBytes_Test is Test {
         // Grab the free memory pointer prior to slicing
         MemoryPointer ptr = TestUtils.getFreeMemoryPtr();
         // Calculate the expected free memory pointer after the slice
-        MemoryPointer expectedPtr = MemoryPointer.wrap(uint24(MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_length)));
+        MemoryPointer expectedPtr =
+            MemoryPointer.wrap(uint24(MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_length)));
 
         Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
 
@@ -72,9 +73,9 @@ contract LibBytes_Test is Test {
         // Check that the free memory pointer has been properly updated to account for the newly allocated memory.
         // Note that new memory is only allocated if the slice length is non-zero.
         if (_length > 0) {
-            assertEq(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+            assertEq(MemoryPointer.unwrap(actualPtr), MemoryPointer.unwrap(expectedPtr));
         } else {
-            assertEq(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(actualPtr));
+            assertEq(MemoryPointer.unwrap(actualPtr), MemoryPointer.unwrap(ptr));
         }
     }
 
@@ -149,13 +150,12 @@ contract LibBytes_Test is Test {
         MemoryPointer ptr = TestUtils.getFreeMemoryPtr();
         // Compute the expected free memory pointer after the operation
         // ptr + length_word + roundUpTo32(length * 2)
-        MemoryPointer expectedPtr = MemoryPointer.wrap(uint24(MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_in.length * 2)));
+        MemoryPointer expectedPtr =
+            MemoryPointer.wrap(uint24(MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_in.length * 2)));
 
         // Assert that the only memory that is touched is between the current free memory pointer
         // and the expected free memory pointer.
-        // TODO: Replace with `vm.expectSafeMemory` once it is implemented in `forge-std`.
         Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
-        // address(vm).call(abi.encodeWithSignature("expectSafeMemory(uint256,uint256)", ptr, expectedPtr));
 
         // Perform the `toNibbles` operation
         assertEq(LibBytes.toNibbles(_in).length, _in.length * 2);

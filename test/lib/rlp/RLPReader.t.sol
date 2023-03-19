@@ -8,6 +8,11 @@ import { RLPReaderLib } from "src/lib/rlp/RLPReaderLib.sol";
 import "src/types/Types.sol";
 import "src/types/Errors.sol";
 
+// TODO: Remove this once `vm.expectSafeMemory` is implemented in `forge-std`.
+interface Cheats {
+    function expectSafeMemory(uint64 _start, uint64 _end) external;
+}
+
 /// @notice Tests for the RLPReaderLib.library's RLPItem type helpers
 contract RLPReaderLib_RLPItemType_Test is Test {
     /// @dev Tests that the `wrapRLPItem` and `unwrapRLPItem` functions work as expected.
@@ -345,14 +350,20 @@ contract RLPReaderLib_readList_Test is Test {
     function test_readList_memorySafety_succeeds() external {
         bytes memory listBytes =
             hex"f840cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376cf84617364668471776572847a786376";
+
+        // Get the free memory pointer before calling `readList`
         MemoryPointer ptr = TestUtils.getFreeMemoryPtr();
+        // Compute the expected free memory pointer after calling `readList`
+        MemoryPointer expectedPtr = MemoryPointer.wrap(MemoryPointer.unwrap(ptr) + 0x20 + 0x80); // ptr + 0x20 (length) + 0x80 (data)
+
+        // Expect the memory between the current free memory pointer and the expected free memory pointer to be touched
+        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+
         RLPReaderLib.readList(listBytes);
+
         MemoryPointer newPtr = TestUtils.getFreeMemoryPtr();
 
         // Check that the free memory pointer was properly updated
-        assertEq(
-            MemoryPointer.unwrap(newPtr),
-            MemoryPointer.unwrap(ptr) + 0x20 + 0x80 // ptr + 0x20 (length) + 0x80 (data)
-        );
+        assertEq(MemoryPointer.unwrap(newPtr), MemoryPointer.unwrap(expectedPtr));
     }
 }
