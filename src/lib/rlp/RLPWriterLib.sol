@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import "src/types/Types.sol";
 import { LibMemory } from "src/lib/LibMemory.sol";
+import { LibBytes } from "src/lib/LibBytes.sol";
 
 /// @title RLPWriterLib
 /// @notice @author RLPWriter is a library for encoding Solidity types to RLP bytes. Adapted from Bakaoh's
@@ -26,8 +27,8 @@ library RLPWriterLib {
     /// @param _in The list of RLP encoded byte strings.
     /// @return _rlp The RLP encoded list.
     function writeList(bytes[] memory _in) internal view returns (bytes memory _rlp) {
-        // TODO: Flatten list func
-        // _rlp = _writeLengthAndAppend(_in.length, 192, _in);
+        bytes memory flattened = LibBytes.flatten(_in);
+        _rlp = _writeLengthAndAppend(flattened.length, 192, flattened);
     }
 
     /// @notice RLP encodes a string.
@@ -49,6 +50,48 @@ library RLPWriterLib {
             mstore(add(add(_rlp, 0x20), prefixLength), shl(0x60, _in))
             // Update the length of the RLP encoded bytes
             mstore(_rlp, add(prefixLength, 0x14))
+        }
+    }
+
+    /// @notice RLP encodes a uint.
+    /// @param _in The uint to encode.
+    /// @return _rlp The RLP encoded uint.
+    function writeUint(uint256 _in) internal view returns (bytes memory _rlp) {
+        (uint256 leadingZeroBytes, uint256 trimmed) = LibBytes.trimLeadingZeros(_in);
+        assembly ("memory-safe") {
+            // Grab some free memory
+            _rlp := mload(0x40)
+
+            // Write the trimmed uint to memory
+            mstore(add(_rlp, 0x20), trimmed)
+
+            // Store the length of the RLP encoded uint
+            mstore(_rlp, sub(0x20, leadingZeroBytes))
+
+            // Update the free memory pointer
+            mstore(0x40, add(_rlp, 0x40))
+        }
+        _rlp = writeBytes(_rlp);
+    }
+
+    /// @notice RLP encodes a bool
+    /// @param _in The bool to encode.
+    /// @return _rlp The RLP encoded bool.
+    function writeBool(bool _in) internal pure returns (bytes memory _rlp) {
+        assembly ("memory-safe") {
+            // Grab some free memory
+            _rlp := mload(0x40)
+
+            // Store the bool in the first byte of the RLP encoded bytes
+            switch _in
+            case true { mstore(add(_rlp, 0x01), 0x01) }
+            case false { mstore(add(_rlp, 0x01), 0x80) }
+
+            // Store the length of the RLP encoded bool
+            mstore(_rlp, 0x01)
+
+            // Update the free memory pointer
+            mstore(0x40, add(_rlp, 0x40))
         }
     }
 

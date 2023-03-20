@@ -7,6 +7,7 @@ import { TestArithmetic } from "test/testutils/TestArithmetic.sol";
 import { LibBytes } from "src/lib/LibBytes.sol";
 import "src/types/Types.sol";
 import "src/types/Errors.sol";
+import { LibMemory } from "src/lib/LibMemory.sol";
 
 // TODO: Remove this once `vm.expectSafeMemory` is implemented in `forge-std`.
 interface Cheats {
@@ -191,5 +192,172 @@ contract LibBytes_Test is Test {
     function testFuzz_equal_notEqual_fails(bytes memory _a, bytes memory _b) public {
         vm.assume(_a.length != _b.length || keccak256(_a) != keccak256(_b));
         assertFalse(LibBytes.equal(_a, _b));
+    }
+
+    ////////////////////////////////////////////////////////////////
+    //                  `trimLeadingZeros` Tests                  //
+    ////////////////////////////////////////////////////////////////
+
+    /// @dev Tests that the `trimLeadingZeros` function works as expected with a static input.
+    function test_trimLeadingZeros_static_succeeds() public {
+        uint256 input = 0xFF000000;
+        (uint256 leadingZeros, uint256 trimmed) = LibBytes.trimLeadingZeros(input);
+        assertEq(28, leadingZeros);
+        assertEq(trimmed, input << 0x1C * 8);
+    }
+
+    /// @dev Tests that the `trimLeadingZeros` function works as expected with a static input.
+    function test_trimLeadingZeros_staticZero_succeeds() public {
+        uint256 input = 0x00;
+        (uint256 leadingZeros, uint256 trimmed) = LibBytes.trimLeadingZeros(input);
+        assertEq(32, leadingZeros);
+        assertEq(trimmed, 0);
+    }
+
+    /// @dev Tests that the `trimLeadingZeros` function works as expected with a static input.
+    function test_trimLeadingZeros_staticFull_succeeds() public {
+        uint256 input = ~uint256(0x00);
+        (uint256 leadingZeros, uint256 trimmed) = LibBytes.trimLeadingZeros(input);
+        assertEq(0, leadingZeros);
+        assertEq(trimmed, input);
+    }
+
+    /// @dev Tests that the `trimLeadingZeros` function works identically to a reference implementation.
+    function testDiff_trimLeadingZeros_succeeds(uint256 _in) public {
+        (uint256 leadingZeros, uint256 trimmed) = LibBytes.trimLeadingZeros(_in);
+        uint8 _leadingZeros;
+        uint256 _trimmed = _in;
+        if (_in == 0) {
+            _leadingZeros = 32;
+            _trimmed = _in;
+        } else {
+            assembly {
+                for { let i := 0 } true { i := add(i, 1) } {
+                    if byte(i, _in) {
+                        _leadingZeros := i
+                        _trimmed := shl(shl(0x03, _leadingZeros), _in)
+                        break
+                    }
+                }
+            }
+        }
+
+        assertEq(_leadingZeros, leadingZeros);
+        assertEq(_trimmed, trimmed);
+    }
+
+    ////////////////////////////////////////////////////////////////
+    //                      `flatten` Tests                       //
+    ////////////////////////////////////////////////////////////////
+
+    /// @dev Tests that the `flatten` function works as expected with a static input.
+    function test_flatten_staticShort_succeeds() public {
+        bytes[] memory bytesArr = new bytes[](3);
+        bytesArr[0] = hex"8232a437549ca0876893c528a1957ff9";
+        bytesArr[1] = hex"8232a437549ca0876893c528a1957ff9";
+        bytesArr[2] = hex"8232a437549ca0876893c528a1957ff9";
+
+        bytes memory expected =
+            hex"8232a437549ca0876893c528a1957ff98232a437549ca0876893c528a1957ff98232a437549ca0876893c528a1957ff9";
+        bytes memory actual = LibBytes.flatten(bytesArr);
+        assertEq(expected, actual);
+    }
+
+    /// @dev Tests that the `flatten` function works as expected with a static input.
+    function test_flatten_staticLong_succeeds() public {
+        bytes[] memory bytesArr = new bytes[](3);
+        bytesArr[0] =
+            hex"082F196D88E817B51D5CFA5D23244F3462ABAE2BE6D5E7A8944BC3035DC28B0639DA5025FB835591070804035C0E0647D7D7BA115686EFD20423B1694FFA6F4FF81DA7717309BD2396E9A74924B427546697966D9068E10CDC2318DBF68C7D61CEF0908043DC";
+        bytesArr[1] =
+            hex"082F196D88E817B51D5CFA5D23244F3462ABAE2BE6D5E7A8944BC3035DC28B0639DA5025FB835591070804035C0E0647D7D7BA115686EFD20423B1694FFA6F4FF81DA7717309BD2396E9A74924B427546697966D9068E10CDC2318DBF68C7D61CEF0908043DC";
+        bytesArr[2] =
+            hex"082F196D88E817B51D5CFA5D23244F3462ABAE2BE6D5E7A8944BC3035DC28B0639DA5025FB835591070804035C0E0647D7D7BA115686EFD20423B1694FFA6F4FF81DA7717309BD2396E9A74924B427546697966D9068E10CDC2318DBF68C7D61CEF0908043DC";
+        bytes memory expected =
+            hex"082F196D88E817B51D5CFA5D23244F3462ABAE2BE6D5E7A8944BC3035DC28B0639DA5025FB835591070804035C0E0647D7D7BA115686EFD20423B1694FFA6F4FF81DA7717309BD2396E9A74924B427546697966D9068E10CDC2318DBF68C7D61CEF0908043DC082F196D88E817B51D5CFA5D23244F3462ABAE2BE6D5E7A8944BC3035DC28B0639DA5025FB835591070804035C0E0647D7D7BA115686EFD20423B1694FFA6F4FF81DA7717309BD2396E9A74924B427546697966D9068E10CDC2318DBF68C7D61CEF0908043DC082F196D88E817B51D5CFA5D23244F3462ABAE2BE6D5E7A8944BC3035DC28B0639DA5025FB835591070804035C0E0647D7D7BA115686EFD20423B1694FFA6F4FF81DA7717309BD2396E9A74924B427546697966D9068E10CDC2318DBF68C7D61CEF0908043DC";
+        bytes memory actual = LibBytes.flatten(bytesArr);
+        assertEq(expected, actual);
+    }
+
+    /// @dev Tests that the `flatten` function assigns the correct length to the resulting array.
+    function testFuzz_flatten_correctLength_succeeds(bytes[] memory _in) public {
+        bytes memory actual = LibBytes.flatten(_in);
+        uint256 expectedLength = 0;
+        for (uint256 i = 0; i < _in.length; i++) {
+            expectedLength += _in[i].length;
+        }
+        assertEq(expectedLength, actual.length);
+    }
+
+    /// @dev Tests that the `flatten` function is identical to a simple solidity implementation of the same function.
+    function testDiff_flatten_solidityImpl_succeeds(bytes[] memory _in) public {
+        bytes memory actual = LibBytes.flatten(_in);
+        bytes memory expected = _flatten(_in);
+        assertEq(expected, actual);
+        assertEq(expected.length, actual.length);
+
+        bool _eq;
+        assembly {
+            _eq := eq(keccak256(expected, add(0x20, mload(expected))), keccak256(actual, add(0x20, mload(actual))))
+        }
+        assertTrue(_eq);
+    }
+
+    /// @dev Tests that the `flatten` function is memory safe.
+    function testFuzz_flatten_memorySafety_succeeds(bytes[] memory _in) public {
+        uint256 expectedLength = 0;
+        for (uint256 i = 0; i < _in.length; i++) {
+            expectedLength += _in[i].length;
+        }
+        MemoryPointer ptr = TestUtils.getFreeMemoryPtr();
+        MemoryPointer expectedPtr =
+            MemoryPointer.wrap(uint24(MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(expectedLength)));
+
+        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+
+        LibBytes.flatten(_in);
+
+        MemoryPointer actual = TestUtils.getFreeMemoryPtr();
+
+        if (expectedLength > 0) {
+            assertEq(MemoryPointer.unwrap(expectedPtr), MemoryPointer.unwrap(actual));
+        } else {
+            assertEq(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(actual));
+        }
+    }
+
+    /// Solidity diff implementation of `LibBytes.flatten`
+    /// TODO: Move to diff testing file
+    function _flatten(bytes[] memory _list) private view returns (bytes memory) {
+        if (_list.length == 0) {
+            return new bytes(0);
+        }
+
+        uint256 len;
+        uint256 i = 0;
+        for (; i < _list.length; i++) {
+            len += _list[i].length;
+        }
+
+        bytes memory flattened = new bytes(len);
+        uint256 flattenedPtr;
+        assembly {
+            flattenedPtr := add(flattened, 0x20)
+        }
+
+        for (i = 0; i < _list.length; i++) {
+            bytes memory item = _list[i];
+
+            uint256 listPtr;
+            assembly {
+                listPtr := add(item, 0x20)
+            }
+
+            LibMemory.mcopyDirect(
+                MemoryPointer.wrap(uint24(listPtr)), MemoryPointer.wrap(uint24(flattenedPtr)), item.length
+            );
+            flattenedPtr += _list[i].length;
+        }
+
+        return flattened;
     }
 }
