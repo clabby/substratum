@@ -21,6 +21,7 @@ library RLPWriterLib {
             isShort := and(lt(byte(0x00, mload(add(_in, 0x20))), 0x80), eq(0x01, mload(_in)))
         }
 
+        // Condition: _in.length == 1 && _in[0] < 128
         if (isShort) {
             _rlp = _in;
         } else {
@@ -46,7 +47,9 @@ library RLPWriterLib {
     /// @notice RLP encodes an address.
     /// @param _in The address to encode.
     /// @return _rlp The RLP encoded address.
-    /// TODO: This is very dangerous, make sure this doesn't clobber memory past _rlp + 20.
+    /// @dev This function is dangerous because it can clobber memory in the word after
+    ///      `_rlp`'s contents. Make sure to only call this function when you know that
+    ///      the word after `_rlp` is not used.
     function writeAddress(address _in) internal pure returns (bytes memory _rlp) {
         _rlp = writeLength(20, 128);
         assembly ("memory-safe") {
@@ -122,14 +125,13 @@ library RLPWriterLib {
                 // Use a De Bruijn lookup to find the last set bit.
                 // Pulled from Solady's LibBit, modified to be more efficient with 32 bit numbers.
                 let x := _length // dup
-                x := or(x, shr(1, x))
-                x := or(x, shr(2, x))
-                x := or(x, shr(4, x))
-                x := or(x, shr(8, x))
-                // x := or(x, shr(16, x))
+                x := or(x, shr(0x01, x))
+                x := or(x, shr(0x02, x))
+                x := or(x, shr(0x04, x))
+                x := or(x, shr(0x08, x))
 
                 // forgefmt: disable-next-item
-                let lastSetBit := sub(add(iszero(x), 255), byte(shr(251, mul(x, shl(224, 0x07c4acdd))),
+                let lastSetBit := sub(add(iszero(x), 0xFF), byte(shr(0xFB, mul(x, shl(0xE0, 0x07c4acdd))),
                     0x0009010a0d15021d0b0e10121619031e080c141c0f111807131b17061a05041f))
 
                 // Calculate the length of the length in bytes by shifting the most significant bit to the right

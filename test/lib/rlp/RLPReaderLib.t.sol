@@ -9,6 +9,7 @@ import "src/types/Types.sol";
 import "src/types/Errors.sol";
 
 /// @notice Tests for the RLPReaderLib.library's RLPItem type helpers
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPReaderLib_RLPItemType_Test is Test {
     /// @dev Tests that the `wrapRLPItem` and `unwrapRLPItem` functions work as expected.
     function testFuzz_wrapUnwrapRLPItem_succeeds(MemoryPointer _ptr, uint232 _len) external {
@@ -43,6 +44,7 @@ contract RLPReaderLib_RLPItemType_Test is Test {
 }
 
 /// @notice Tests for the RLPReaderLib.library's `readBytes` function.
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPReaderLib_readBytes_Test is Test {
     /// @dev Tests that the `readBytes` function returns the correct value for
     ///      a "00" byte string.
@@ -99,6 +101,7 @@ contract RLPReaderLib_readBytes_Test is Test {
 }
 
 /// @notice Tests for the RLPReaderLib.library's `readList` function.
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPReaderLib_readList_Test is Test {
     /// @dev Tests that the `readList` function returns the correct value for
     ///      an empty list.

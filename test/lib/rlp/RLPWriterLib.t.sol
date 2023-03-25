@@ -8,73 +8,44 @@ import { RLPWriterLib } from "src/lib/rlp/RLPWriterLib.sol";
 import "src/types/Types.sol";
 import "src/types/Errors.sol";
 
-contract RLPWriterLib_Test is Test {
-    function _writeLength(uint256 _len, uint256 _offset) private pure returns (bytes memory) {
-        bytes memory encoded;
-
-        if (_len < 56) {
-            encoded = new bytes(1);
-            encoded[0] = bytes1(uint8(_len) + uint8(_offset));
-        } else {
-            uint256 lenLen;
-            uint256 i = 1;
-            while (_len / i != 0) {
-                lenLen++;
-                i *= 256;
-            }
-
-            encoded = new bytes(lenLen + 1);
-            encoded[0] = bytes1(uint8(lenLen) + uint8(_offset) + 55);
-            for (i = 1; i <= lenLen; i++) {
-                encoded[i] = bytes1(uint8((_len / (256 ** (lenLen - i))) % 256));
-            }
-        }
-
-        return encoded;
-    }
-
-    function testFuzzEquiv(uint32 _len) public {
-        uint8 _offset = _len < 56 ? 128 : 192;
-        assertEq(_writeLength(_len, _offset), RLPWriterLib.writeLength(_len, _offset));
-    }
-}
-
+/// @notice Tests for `RLPWriterLib`'s `writeString` function.
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPWriterLib_writeString_Test is Test {
-    function test_writeString_empty_succeeds() external {
+    function test_writeString_empty_succeeds() public {
         assertEq(RLPWriterLib.writeString(""), hex"80");
     }
 
-    function test_writeString_bytestring00_succeeds() external {
+    function test_writeString_bytestring00_succeeds() public {
         assertEq(RLPWriterLib.writeString("\u0000"), hex"00");
     }
 
-    function test_writeString_bytestring01_succeeds() external {
+    function test_writeString_bytestring01_succeeds() public {
         assertEq(RLPWriterLib.writeString("\u0001"), hex"01");
     }
 
-    function test_writeString_bytestring7f_succeeds() external {
+    function test_writeString_bytestring7f_succeeds() public {
         assertEq(RLPWriterLib.writeString("\u007F"), hex"7f");
     }
 
-    function test_writeString_shortstring_succeeds() external {
+    function test_writeString_shortstring_succeeds() public {
         assertEq(RLPWriterLib.writeString("dog"), hex"83646f67");
     }
 
-    function test_writeString_shortstring2_succeeds() external {
+    function test_writeString_shortstring2_succeeds() public {
         assertEq(
             RLPWriterLib.writeString("Lorem ipsum dolor sit amet, consectetur adipisicing eli"),
             hex"b74c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c69"
         );
     }
 
-    function test_writeString_longstring_succeeds() external {
+    function test_writeString_longstring_succeeds() public {
         assertEq(
             RLPWriterLib.writeString("Lorem ipsum dolor sit amet, consectetur adipisicing elit"),
             hex"b8384c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974"
         );
     }
 
-    function test_writeString_longstring2_succeeds() external {
+    function test_writeString_longstring2_succeeds() public {
         assertEq(
             RLPWriterLib.writeString(
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur mauris magna, suscipit sed vehicula non, iaculis faucibus tortor. Proin suscipit ultricies malesuada. Duis tortor elit, dictum quis tristique eu, ultrices at risus. Morbi a est imperdiet mi ullamcorper aliquet suscipit nec lorem. Aenean quis leo mollis, vulputate elit varius, consequat enim. Nulla ultrices turpis justo, et posuere urna consectetur nec. Proin non convallis metus. Donec tempor ipsum in mauris congue sollicitudin. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Suspendisse convallis sem vel massa faucibus, eget lacinia lacus tempor. Nulla quis ultricies purus. Proin auctor rhoncus nibh condimentum mollis. Aliquam consequat enim at metus luctus, a eleifend purus egestas. Curabitur at nibh metus. Nam bibendum, neque at auctor tristique, lorem libero aliquet arcu, non interdum tellus lectus sit amet eros. Cras rhoncus, metus ac ornare cursus, dolor justo ultrices metus, at ullamcorper volutpat"
@@ -84,46 +55,50 @@ contract RLPWriterLib_writeString_Test is Test {
     }
 }
 
+/// @notice Tests for `RLPWriterLib`'s `writeUint` function.
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPWriterLib_writeUint_Test is Test {
-    function test_writeUint_zero_succeeds() external {
+    function test_writeUint_zero_succeeds() public {
         assertEq(RLPWriterLib.writeUint(0x0), hex"80");
     }
 
-    function test_writeUint_smallint_succeeds() external {
+    function test_writeUint_smallint_succeeds() public {
         assertEq(RLPWriterLib.writeUint(1), hex"01");
     }
 
-    function test_writeUint_smallint2_succeeds() external {
+    function test_writeUint_smallint2_succeeds() public {
         assertEq(RLPWriterLib.writeUint(16), hex"10");
     }
 
-    function test_writeUint_smallint3_succeeds() external {
+    function test_writeUint_smallint3_succeeds() public {
         assertEq(RLPWriterLib.writeUint(79), hex"4f");
     }
 
-    function test_writeUint_smallint4_succeeds() external {
+    function test_writeUint_smallint4_succeeds() public {
         assertEq(RLPWriterLib.writeUint(127), hex"7f");
     }
 
-    function test_writeUint_mediumint_succeeds() external {
+    function test_writeUint_mediumint_succeeds() public {
         assertEq(RLPWriterLib.writeUint(128), hex"8180");
     }
 
-    function test_writeUint_mediumint2_succeeds() external {
+    function test_writeUint_mediumint2_succeeds() public {
         assertEq(RLPWriterLib.writeUint(1000), hex"8203e8");
     }
 
-    function test_writeUint_mediumint3_succeeds() external {
+    function test_writeUint_mediumint3_succeeds() public {
         assertEq(RLPWriterLib.writeUint(100000), hex"830186a0");
     }
 }
 
+/// @notice Tests for `RLPWriterLib`'s `writeList` function.
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPWriterLib_writeList_Test is Test {
-    function test_writeList_empty_succeeds() external {
+    function test_writeList_empty_succeeds() public {
         assertEq(RLPWriterLib.writeList(new bytes[](0)), hex"c0");
     }
 
-    function test_writeList_stringList_succeeds() external {
+    function test_writeList_stringList_succeeds() public {
         bytes[] memory list = new bytes[](3);
         list[0] = RLPWriterLib.writeString("dog");
         list[1] = RLPWriterLib.writeString("god");
@@ -132,7 +107,7 @@ contract RLPWriterLib_writeList_Test is Test {
         assertEq(RLPWriterLib.writeList(list), hex"cc83646f6783676f6483636174");
     }
 
-    function test_writeList_multiList_succeeds() external {
+    function test_writeList_multiList_succeeds() public {
         bytes[] memory list = new bytes[](3);
         bytes[] memory list2 = new bytes[](1);
         list2[0] = RLPWriterLib.writeUint(4);
@@ -144,7 +119,7 @@ contract RLPWriterLib_writeList_Test is Test {
         assertEq(RLPWriterLib.writeList(list), hex"c6827a77c10401");
     }
 
-    function test_writeList_shortListMax1_succeeds() external {
+    function test_writeList_shortListMax1_succeeds() public {
         bytes[] memory list = new bytes[](11);
         list[0] = RLPWriterLib.writeString("asdf");
         list[1] = RLPWriterLib.writeString("qwer");
@@ -164,7 +139,7 @@ contract RLPWriterLib_writeList_Test is Test {
         );
     }
 
-    function test_writeList_longlist1_succeeds() external {
+    function test_writeList_longlist1_succeeds() public {
         bytes[] memory list = new bytes[](4);
         bytes[] memory list2 = new bytes[](3);
 
@@ -183,7 +158,7 @@ contract RLPWriterLib_writeList_Test is Test {
         );
     }
 
-    function test_writeList_longlist2_succeeds() external {
+    function test_writeList_longlist2_succeeds() public {
         bytes[] memory list = new bytes[](32);
         bytes[] memory list2 = new bytes[](3);
 
@@ -201,7 +176,7 @@ contract RLPWriterLib_writeList_Test is Test {
         );
     }
 
-    function test_writeList_listoflists_succeeds() external {
+    function test_writeList_listoflists_succeeds() public {
         // [ [ [], [] ], [] ]
         bytes[] memory list = new bytes[](2);
         bytes[] memory list2 = new bytes[](2);
@@ -215,7 +190,7 @@ contract RLPWriterLib_writeList_Test is Test {
         assertEq(RLPWriterLib.writeList(list), hex"c4c2c0c0c0");
     }
 
-    function test_writeList_listoflists2_succeeds() external {
+    function test_writeList_listoflists2_succeeds() public {
         // [ [], [[]], [ [], [[]] ] ]
         bytes[] memory list = new bytes[](3);
         list[0] = RLPWriterLib.writeList(new bytes[](0));
@@ -234,7 +209,7 @@ contract RLPWriterLib_writeList_Test is Test {
         assertEq(RLPWriterLib.writeList(list), hex"c7c0c1c0c3c0c1c0");
     }
 
-    function test_writeList_dictTest1_succeeds() external {
+    function test_writeList_dictTest1_succeeds() public {
         bytes[] memory list = new bytes[](4);
 
         bytes[] memory list1 = new bytes[](2);
