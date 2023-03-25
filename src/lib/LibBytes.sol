@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import { LibBit } from "solady/utils/LibBit.sol";
+
 /// @title LibBytes
 /// @notice A library for manipulating dynamic bytes types in memory
 library LibBytes {
@@ -125,6 +127,58 @@ library LibBytes {
             // Hash the first and second byte arrays (including the length offset) and check
             // for equality.
             _eq := eq(keccak256(_a, add(mload(_a), 0x20)), keccak256(_b, add(mload(_b), 0x20)))
+        }
+    }
+
+    /// @notice Trims leading zeros from a 32 byte word.
+    /// @param _word Word to trim.
+    /// @return _leadingZeros Number of leading zero bytes removed.
+    /// @return _trimmed Word with leading zeros removed.
+    function trimLeadingZeros(uint256 _word) internal pure returns (uint256 _leadingZeros, uint256 _trimmed) {
+        _leadingZeros = LibBit.clz(_word);
+        assembly ("memory-safe") {
+            _leadingZeros := shr(0x03, _leadingZeros)
+            _trimmed := shl(shl(0x03, _leadingZeros), _word)
+        }
+    }
+
+    /// @notice Flattens a bytes array into a single bytes array.
+    /// @param _in Bytes array to flatten.
+    /// @return _out Flattened bytes array.
+    function flatten(bytes[] memory _in) internal view returns (bytes memory _out) {
+        assembly ("memory-safe") {
+            let length := mload(_in)
+
+            switch length
+            case 0x00 { _out := 0x60 }
+            default {
+                // Grab some free memory
+                _out := mload(0x40)
+
+                let inData := add(_in, 0x20)
+                let outData := add(_out, 0x20)
+                let totalLength := 0x00
+                // Copy all of the memory from each bytes array into the new array
+                for { let i := 0x00 } lt(i, shl(0x05, length)) { i := add(i, 0x20) } {
+                    // Grab the pointer to the length of the array
+                    let ptr := mload(add(inData, i))
+
+                    // Grab the length of the array
+                    let subLength := mload(ptr)
+
+                    // Copy the data within the array to the new array using the staticcall precompile
+                    pop(staticcall(gas(), 0x04, add(ptr, 0x20), subLength, add(outData, totalLength), subLength))
+
+                    // Increment `totalLength` by `subLength`
+                    totalLength := add(totalLength, subLength)
+                }
+
+                // Assign `_out`'s length to `totalLength`
+                mstore(_out, totalLength)
+
+                // Update the free memory pointer
+                mstore(0x40, add(_out, and(not(0x1F), add(totalLength, 0x3F))))
+            }
         }
     }
 }

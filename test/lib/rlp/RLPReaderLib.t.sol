@@ -8,12 +8,8 @@ import { RLPReaderLib } from "src/lib/rlp/RLPReaderLib.sol";
 import "src/types/Types.sol";
 import "src/types/Errors.sol";
 
-// TODO: Remove this once `vm.expectSafeMemory` is implemented in `forge-std`.
-interface Cheats {
-    function expectSafeMemory(uint64 _start, uint64 _end) external;
-}
-
 /// @notice Tests for the RLPReaderLib.library's RLPItem type helpers
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPReaderLib_RLPItemType_Test is Test {
     /// @dev Tests that the `wrapRLPItem` and `unwrapRLPItem` functions work as expected.
     function testFuzz_wrapUnwrapRLPItem_succeeds(MemoryPointer _ptr, uint232 _len) external {
@@ -48,6 +44,7 @@ contract RLPReaderLib_RLPItemType_Test is Test {
 }
 
 /// @notice Tests for the RLPReaderLib.library's `readBytes` function.
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPReaderLib_readBytes_Test is Test {
     /// @dev Tests that the `readBytes` function returns the correct value for
     ///      a "00" byte string.
@@ -104,6 +101,7 @@ contract RLPReaderLib_readBytes_Test is Test {
 }
 
 /// @notice Tests for the RLPReaderLib.library's `readList` function.
+/// @dev Legacy tests from `contracts-bedrock`
 contract RLPReaderLib_readList_Test is Test {
     /// @dev Tests that the `readList` function returns the correct value for
     ///      an empty list.
@@ -357,7 +355,7 @@ contract RLPReaderLib_readList_Test is Test {
         MemoryPointer expectedPtr = MemoryPointer.wrap(MemoryPointer.unwrap(ptr) + 0x20 + 0x80); // ptr + 0x20 (length) + 0x80 (data)
 
         // Expect the memory between the current free memory pointer and the expected free memory pointer to be touched
-        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+        vm.expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
 
         RLPReaderLib.readList(listBytes);
 

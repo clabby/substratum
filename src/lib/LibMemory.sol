@@ -42,4 +42,15 @@ library LibMemory {
             }
         }
     }
+
+    /// @notice Copies the bytes from a memory location to another memory location.
+    /// @param _src    Pointer to the location to read from.
+    /// @param _dest   Pointer to the location to write to.
+    /// @param _length Number of bytes to copy starting from the `_src` pointer.
+    function mcopyDirect(MemoryPointer _src, MemoryPointer _dest, uint256 _length) internal view {
+        assembly ("memory-safe") {
+            // Copy the bytes using the identity precompile.
+            pop(staticcall(gas(), 0x04, _src, _length, _dest, _length))
+        }
+    }
 }

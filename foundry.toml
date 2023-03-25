@@ -6,11 +6,15 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
-remappings = ['forge-std=lib/forge-std/src', 'src=src']
+remappings = [
+  'forge-std=lib/forge-std/src',
+  'src=src',
+  'solady=lib/solady/src',
+  'ctb=node_modules/@eth-optimism/contracts-bedrock/contracts'
+]
 solc = '0.8.19'
-via_ir = true
 optimizer = true
-optimizer_runs = 100_000
+optimizer_runs = 1_000_000
 
 [profile.default.fuzz]
 runs = 512
