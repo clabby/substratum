@@ -12,7 +12,10 @@ library LibMemory {
     /// @param _offset Offset to start reading from.
     /// @param _length Number of bytes to read.
     /// @return _out Copied bytes.
-    // TODO: The identity precompile may be more efficient here for large lengths. Run some comparisons.
+    /// @dev This function can potentially cause memory safety issues if it is important that the final word of the copied
+    ///      bytes is not partially dirty. This is because the final word is not cleaned after copying. For hashing operations,
+    ///      this is not an issue because the only bytes that are included in the preimage are within the bounds of the length
+    ///      of the dynamic type.
     function mcopy(MemoryPointer _src, uint256 _offset, uint256 _length) internal pure returns (bytes memory _out) {
         assembly ("memory-safe") {
             switch _length
@@ -43,7 +46,7 @@ library LibMemory {
         }
     }
 
-    /// @notice Copies the bytes from a memory location to another memory location.
+    /// @notice Copies the bytes from a memory location to another memory location directly.
     /// @param _src    Pointer to the location to read from.
     /// @param _dest   Pointer to the location to write to.
     /// @param _length Number of bytes to copy starting from the `_src` pointer.
