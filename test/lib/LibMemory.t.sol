@@ -5,6 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { TestUtils } from "test/testutils/TestUtils.sol";
 import { TestArithmetic } from "test/testutils/TestArithmetic.sol";
 import { LibMemory } from "src/lib/LibMemory.sol";
+import { LibBytes } from "src/lib/LibBytes.sol";
 import "src/types/Types.sol";
 
 /// @title LibMemory_Test
@@ -15,15 +16,39 @@ contract LibMemory_Test is Test {
     ////////////////////////////////////////////////////////////////
 
     /// @dev Tests that `mcopy` correctly copies a given memory region.
-    function test_mcopy_correctness_succeeds(bytes memory _in) public {
+    function test_mcopy_correctnessNoOffset_succeeds(bytes calldata _in, uint256 _length) public {
+        // Ensure that the length is within the bounds of the input.
+        _length = bound(_length, 0, _in.length);
+
+        bytes memory _inMem = _in;
         MemoryPointer inPtr;
         assembly ("memory-safe") {
-            inPtr := add(_in, 0x20)
+            inPtr := add(_inMem, 0x20)
         }
-        bytes memory copied = LibMemory.mcopy(inPtr, 0, _in.length);
+        bytes memory copied = LibMemory.mcopy(inPtr, 0, _length);
 
-        assertEq(_in, copied);
-        assertEq(_in.length, copied.length);
+        assertEq(_in[:_length], copied);
+        assertTrue(LibBytes.equal(_in[:_length], copied));
+        assertEq(_length, copied.length);
+    }
+
+    /// @dev Tests that `mcopy` correctly copies a given memory region.
+    function test_mcopy_correctnessWithOffset_succeeds(bytes calldata _in, uint256 _offset, uint256 _length) public {
+        // Ensure that the offset is within the bounds of the input.
+        _offset = bound(_offset, 0, TestArithmetic.saturatingSub(_in.length, 1));
+        // Ensure that the length is within the bounds of the input.
+        _length = bound(_length, 0, TestArithmetic.saturatingSub(_in.length, _offset));
+
+        bytes memory _inMem = _in;
+        MemoryPointer inPtr;
+        assembly ("memory-safe") {
+            inPtr := add(_inMem, 0x20)
+        }
+        bytes memory copied = LibMemory.mcopy(inPtr, _offset, _length);
+
+        assertEq(_in[_offset:(_offset + _length)], copied);
+        assertTrue(LibBytes.equal(_in[_offset:(_offset + _length)], copied));
+        assertEq(_length, copied.length);
     }
 
     /// @dev Tests that `mcopy` is memory safe.
