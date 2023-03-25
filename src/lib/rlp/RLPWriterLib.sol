@@ -16,10 +16,15 @@ library RLPWriterLib {
     /// @param _in The byte string to encode.
     /// @return _rlp The RLP encoded byte string.
     function writeBytes(bytes memory _in) internal view returns (bytes memory _rlp) {
-        if (_in.length == 1 && uint8(_in[0]) < 128) {
+        bool isShort;
+        assembly ("memory-safe") {
+            isShort := and(lt(byte(0x00, mload(add(_in, 0x20))), 0x80), eq(0x01, mload(_in)))
+        }
+
+        if (isShort) {
             _rlp = _in;
         } else {
-            _rlp = _writeLengthAndAppend(_in.length, 128, _in);
+            _rlp = _writeLengthAndAppend(uint32(_in.length), 128, _in);
         }
     }
 
@@ -28,19 +33,20 @@ library RLPWriterLib {
     /// @return _rlp The RLP encoded list.
     function writeList(bytes[] memory _in) internal view returns (bytes memory _rlp) {
         bytes memory flattened = LibBytes.flatten(_in);
-        _rlp = _writeLengthAndAppend(flattened.length, 192, flattened);
+        _rlp = _writeLengthAndAppend(uint32(flattened.length), 192, flattened);
     }
 
     /// @notice RLP encodes a string.
     /// @param _in The string to encode.
     /// @return _rlp The RLP encoded string.
     function writeString(string memory _in) internal view returns (bytes memory _rlp) {
-        return writeBytes(bytes(_in));
+        _rlp = writeBytes(bytes(_in));
     }
 
     /// @notice RLP encodes an address.
     /// @param _in The address to encode.
     /// @return _rlp The RLP encoded address.
+    /// TODO: This is very dangerous, make sure this doesn't clobber memory past _rlp + 20.
     function writeAddress(address _in) internal pure returns (bytes memory _rlp) {
         _rlp = writeLength(20, 128);
         assembly ("memory-safe") {
@@ -99,7 +105,7 @@ library RLPWriterLib {
     /// @param _length The length of the payload.
     /// @param _offset 128 if the item is a string, 192 if it is a list.
     /// @return _rlp The RLP encoded prefix + length.
-    function writeLength(uint256 _length, uint256 _offset) internal pure returns (bytes memory _rlp) {
+    function writeLength(uint32 _length, uint8 _offset) internal pure returns (bytes memory _rlp) {
         assembly ("memory-safe") {
             // Grab some free memory for the RLP encoded bytes
             _rlp := mload(0x40)
@@ -113,29 +119,20 @@ library RLPWriterLib {
                 mstore8(add(_rlp, 0x20), add(_length, _offset))
             }
             case false {
-                // Count leading zero bits in `_length`
-
-                let x := _length // copy
-                // Get the length of the length (in bits)
-                let t := add(iszero(x), 255)
-
-                let lastSetBit := shl(7, lt(0xffffffffffffffffffffffffffffffff, x))
-                lastSetBit := or(lastSetBit, shl(6, lt(0xffffffffffffffff, shr(lastSetBit, x))))
-                lastSetBit := or(lastSetBit, shl(5, lt(0xffffffff, shr(lastSetBit, x))))
-
-                // For the remaining 32 bits, use a De Bruijn lookup.
-                x := shr(lastSetBit, x)
+                // Use a De Bruijn lookup to find the last set bit.
+                // Pulled from Solady's LibBit, modified to be more efficient with 32 bit numbers.
+                let x := _length // dup
                 x := or(x, shr(1, x))
                 x := or(x, shr(2, x))
                 x := or(x, shr(4, x))
                 x := or(x, shr(8, x))
-                x := or(x, shr(16, x))
+                // x := or(x, shr(16, x))
 
                 // forgefmt: disable-next-item
-                lastSetBit := sub(t, or(lastSetBit, byte(shr(251, mul(x, shl(224, 0x07c4acdd))),
-                    0x0009010a0d15021d0b0e10121619031e080c141c0f111807131b17061a05041f)))
+                let lastSetBit := sub(add(iszero(x), 255), byte(shr(251, mul(x, shl(224, 0x07c4acdd))),
+                    0x0009010a0d15021d0b0e10121619031e080c141c0f111807131b17061a05041f))
 
-                // Calculate the length of the length by shifting the most significant bit to the right
+                // Calculate the length of the length in bytes by shifting the most significant bit to the right
                 // by 3 (integer div by 8) and subtracting this value from 0x20 (32 bytes)
                 let lengthOfLength := sub(0x20, shr(0x03, lastSetBit))
 
@@ -153,9 +150,9 @@ library RLPWriterLib {
 
     /// @notice Encode an RLP string.
     /// @param _length The length of the string.
-    /// @param _offset The offset to use for the string.
+    /// @param _offset The offset to use for the string. 128 for a string, 192 for a list.
     /// @param _in The string to encode.
-    function _writeLengthAndAppend(uint256 _length, uint256 _offset, bytes memory _in)
+    function _writeLengthAndAppend(uint32 _length, uint8 _offset, bytes memory _in)
         internal
         view
         returns (bytes memory _rlp)
@@ -164,14 +161,11 @@ library RLPWriterLib {
         _rlp = writeLength(_length, _offset);
 
         // Copy the string into the RLP encoded bytes array
-        uint256 lengthOfLength;
-        uint256 lengthOfString;
+        uint256 lengthOfLength = _rlp.length;
+        uint256 lengthOfString = _in.length;
         MemoryPointer inPtr;
         MemoryPointer destPtr;
         assembly ("memory-safe") {
-            lengthOfLength := mload(_rlp)
-            lengthOfString := mload(_in)
-
             inPtr := add(_in, 0x20)
             destPtr := add(add(_rlp, 0x20), lengthOfLength)
         }

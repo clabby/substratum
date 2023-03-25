@@ -7,11 +7,6 @@ import { TestArithmetic } from "test/testutils/TestArithmetic.sol";
 import { LibHashing } from "src/lib/LibHashing.sol";
 import "src/types/Types.sol";
 
-// TODO: Remove this once `vm.expectSafeMemory` is implemented in `forge-std`.
-interface Cheats {
-    function expectSafeMemory(uint64 _start, uint64 _end) external;
-}
-
 /// @title LibHashing_Test
 /// @notice Tests for the `LibHashing` library.
 contract LibHashing_Test is Test {
@@ -53,7 +48,7 @@ contract LibHashing_Test is Test {
             MemoryPointer.wrap(uint24(MemoryPointer.unwrap(ptr) + 0xE0 + TestArithmetic.roundUpTo32(_tx.data.length)));
 
         // Expect the memory region between the current and expected pointers to be touched.
-        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+        vm.expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
 
         // Hash the withdrawal transaction.
         _tx.hash();

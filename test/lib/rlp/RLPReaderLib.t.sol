@@ -8,11 +8,6 @@ import { RLPReaderLib } from "src/lib/rlp/RLPReaderLib.sol";
 import "src/types/Types.sol";
 import "src/types/Errors.sol";
 
-// TODO: Remove this once `vm.expectSafeMemory` is implemented in `forge-std`.
-interface Cheats {
-    function expectSafeMemory(uint64 _start, uint64 _end) external;
-}
-
 /// @notice Tests for the RLPReaderLib.library's RLPItem type helpers
 contract RLPReaderLib_RLPItemType_Test is Test {
     /// @dev Tests that the `wrapRLPItem` and `unwrapRLPItem` functions work as expected.
@@ -357,7 +352,7 @@ contract RLPReaderLib_readList_Test is Test {
         MemoryPointer expectedPtr = MemoryPointer.wrap(MemoryPointer.unwrap(ptr) + 0x20 + 0x80); // ptr + 0x20 (length) + 0x80 (data)
 
         // Expect the memory between the current free memory pointer and the expected free memory pointer to be touched
-        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+        vm.expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
 
         RLPReaderLib.readList(listBytes);
 

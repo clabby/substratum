@@ -8,6 +8,11 @@
   "private": true,
   "scripts": {
     "gen:header": "python3 scripts/section_header.py",
-    "snapshot": "forge snapshot --no-match-test 'testFuzz|testDiff'"
+    "snapshot": "forge snapshot --no-match-test 'testFuzz|testDiff'",
+    "test:full": "forge test",
+    "test:quick": "forge test --no-match-test 'testFuzz|testDiff'"
+  },
+  "devDependencies": {
+    "@eth-optimism/contracts-bedrock": "^0.13.1"
   }
 }

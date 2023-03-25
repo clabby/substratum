@@ -8,12 +8,6 @@ import { RLPWriterLib } from "src/lib/rlp/RLPWriterLib.sol";
 import "src/types/Types.sol";
 import "src/types/Errors.sol";
 
-// TODO: Remove this once `vm.expectSafeMemory` is implemented in `forge-std`.
-interface Cheats {
-    function expectSafeMemory(uint64 _start, uint64 _end) external;
-}
-
-/// @notice Tests for the RLPReaderLib.library's RLPItem type helpers
 contract RLPWriterLib_Test is Test {
     function _writeLength(uint256 _len, uint256 _offset) private pure returns (bytes memory) {
         bytes memory encoded;
@@ -39,10 +33,8 @@ contract RLPWriterLib_Test is Test {
         return encoded;
     }
 
-    function testFuzzEquiv(uint8 _len, uint8 _offset) public {
-        vm.assume(_len <= 127);
-        vm.assume(_offset <= 127);
-        vm.assume(_len + _offset < (256 - 60));
+    function testFuzzEquiv(uint32 _len) public {
+        uint8 _offset = _len < 56 ? 128 : 192;
         assertEq(_writeLength(_len, _offset), RLPWriterLib.writeLength(_len, _offset));
     }
 }

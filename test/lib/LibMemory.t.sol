@@ -7,11 +7,6 @@ import { TestArithmetic } from "test/testutils/TestArithmetic.sol";
 import { LibMemory } from "src/lib/LibMemory.sol";
 import "src/types/Types.sol";
 
-// TODO: Remove this once `vm.expectSafeMemory` is implemented in `forge-std`.
-interface Cheats {
-    function expectSafeMemory(uint64 _start, uint64 _end) external;
-}
-
 /// @title LibMemory_Test
 /// @notice Tests for the `LibMemory` library.
 contract LibMemory_Test is Test {
@@ -39,7 +34,7 @@ contract LibMemory_Test is Test {
             inPtr := add(_in, 0x20)
         }
 
-        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+        vm.expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
 
         LibMemory.mcopy(inPtr, 0, _in.length);
 

@@ -9,11 +9,6 @@ import "src/types/Types.sol";
 import "src/types/Errors.sol";
 import { LibMemory } from "src/lib/LibMemory.sol";
 
-// TODO: Remove this once `vm.expectSafeMemory` is implemented in `forge-std`.
-interface Cheats {
-    function expectSafeMemory(uint64 _start, uint64 _end) external;
-}
-
 /// @title LibBytes_Test
 /// @notice Tests for the `LibBytes` library.
 contract LibBytes_Test is Test {
@@ -63,7 +58,7 @@ contract LibBytes_Test is Test {
         MemoryPointer expectedPtr =
             MemoryPointer.wrap(uint24(MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(_length)));
 
-        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+        vm.expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
 
         // Perform a slice
         LibBytes.slice(_bytes, _start, _length);
@@ -156,7 +151,7 @@ contract LibBytes_Test is Test {
 
         // Assert that the only memory that is touched is between the current free memory pointer
         // and the expected free memory pointer.
-        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+        vm.expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
 
         // Perform the `toNibbles` operation
         assertEq(LibBytes.toNibbles(_in).length, _in.length * 2);
@@ -312,7 +307,7 @@ contract LibBytes_Test is Test {
         MemoryPointer expectedPtr =
             MemoryPointer.wrap(uint24(MemoryPointer.unwrap(ptr) + 0x20 + TestArithmetic.roundUpTo32(expectedLength)));
 
-        Cheats(address(vm)).expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
+        vm.expectSafeMemory(MemoryPointer.unwrap(ptr), MemoryPointer.unwrap(expectedPtr));
 
         LibBytes.flatten(_in);
 
