@@ -10,6 +10,10 @@ import "src/types/Types.sol";
 /// @title LibMemory_Test
 /// @notice Tests for the `LibMemory` library.
 contract LibMemory_Test is Test {
+    ////////////////////////////////////////////////////////////////
+    //                       `mcopy` Tests                        //
+    ////////////////////////////////////////////////////////////////
+
     /// @dev Tests that `mcopy` correctly copies a given memory region.
     function test_mcopy_correctness_succeeds(bytes memory _in) public {
         MemoryPointer inPtr;

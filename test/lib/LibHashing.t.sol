@@ -18,7 +18,7 @@ contract LibHashing_Test is Test {
     using LibHashing for WithdrawalTransaction;
 
     ////////////////////////////////////////////////////////////////
-    //                      LibHashing Tests                      //
+    //                 `hashDepositSource` Tests                  //
     ////////////////////////////////////////////////////////////////
 
     /// @dev Tests that `LibHashing`'s `hashDepositSource` function correctly computes the source
@@ -29,6 +29,10 @@ contract LibHashing_Test is Test {
             keccak256(abi.encode(uint256(0), keccak256(abi.encode(_hash, _logIndex))))
         );
     }
+
+    ////////////////////////////////////////////////////////////////
+    //             `hashWithdrawalTransaction` Tests              //
+    ////////////////////////////////////////////////////////////////
 
     /// @dev Tests that `LibHashing`'s `hash` function correctly computes the hash of a withdrawal
     ///      transaction.
