@@ -25,6 +25,16 @@ type Duration is uint64;
 /// TODO: Assess for L2 params.
 type MemoryPointer is uint24;
 
+/// @notice A dedicated type for a versioned nonce.
+/// @dev The versioned nonce contains two pieces of information:
+/// ┌───────────┬────────────────┐
+/// │   Bits    │  Description   │
+/// ├───────────┼────────────────┤
+/// │ [0, 16)   │ Version        │
+/// │ [16, 256) │ Nonce          │
+/// └───────────┴────────────────┘
+type VersionedNonce is uint256;
+
 ////////////////////////////////////////////////////////////////
 //                          Structs                           //
 ////////////////////////////////////////////////////////////////

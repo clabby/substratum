@@ -61,7 +61,6 @@ library LibHashing {
 
             // Copy data (wen mcopy)
             let dataLenRounded := and(not(0x1F), add(dataLen, 0xFF))
-            let dataEnd := add(_tx, dataLenRounded)
             for { let offset := 0xE0 } lt(offset, dataLenRounded) { offset := add(offset, 0x20) } {
                 mstore(add(ptr, offset), mload(add(_tx, offset)))
             }
