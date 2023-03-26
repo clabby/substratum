@@ -49,7 +49,7 @@ library RLPWriterLib {
     /// @return _rlp The RLP encoded address.
     /// @dev This function is dangerous because it can clobber memory in the word after
     ///      `_rlp`'s contents. Make sure to only call this function when you know that
-    ///      the word after `_rlp` is not used.
+    ///      the word after `_rlp` is not used yet.
     function writeAddress(address _in) internal pure returns (bytes memory _rlp) {
         _rlp = writeLength(20, 128);
         assembly ("memory-safe") {
@@ -120,6 +120,8 @@ library RLPWriterLib {
                 mstore(_rlp, 0x01)
                 // Store the prefix: length + offset
                 mstore8(add(_rlp, 0x20), add(_length, _offset))
+                // Update the free memory pointer
+                mstore(0x40, add(_rlp, 0x40))
             }
             case false {
                 // Use a De Bruijn lookup to find the last set bit.
@@ -146,6 +148,9 @@ library RLPWriterLib {
 
                 // Store the lengthOfLength + offset + 55
                 mstore8(add(_rlp, 0x20), add(add(lengthOfLength, _offset), 0x37))
+
+                // In this case, we do not update the free memory pointer. Instead, `_writeLengthAndAppend`
+                // will update the free memory pointer after it has appended the string to the prefix.
             }
         }
     }
@@ -176,6 +181,9 @@ library RLPWriterLib {
         // Re-assign the length of the RLP encoded bytes array
         assembly ("memory-safe") {
             mstore(_rlp, add(lengthOfLength, lengthOfString))
+
+            // Update the free memory pointer
+            mstore(0x40, and(add(add(destPtr, lengthOfString), 0x1F), not(0x1F)))
         }
     }
 }
