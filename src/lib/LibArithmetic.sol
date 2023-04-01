@@ -11,13 +11,28 @@ library LibArithmetic {
         int256 _value,
         int256 _min,
         int256 _max
-    ) internal pure returns (int256) {
-        int256 clampedMax = _value > _min ? _value : _min;
-        int256 clampedMin =  clampedMax < _max ? clampedMax : _max;
+    ) internal pure returns (int256 clampedMin) {
+        int256 clampedMax;
+        assembly ("memory-safe") {
+            switch gt(_value, _min) 
+            case 1 {
+                clampedMax := _value
+            }
+            default {
+                clampedMax := _min
+            }
+            switch lt(clampedMax, _max)
+            case 1 {
+                clampedMin := clampedMax
+            }
+            default {
+                clampedMin := _max
+            }
 
-        return clampedMin;
+        }
     }
 
+    int256 internal constant WAD = 1e18;
 
     /// @notice (c)oefficient (d)enominator (exp)onentiation function.
     ///         Returns the result of: c * (1 - 1/d)^exp.
@@ -34,6 +49,6 @@ library LibArithmetic {
     ) internal pure returns (int256) {
         return
             (_coefficient *
-                (FixedPointMathLib.powWad(1e18 - (1e18 / _denominator), _exponent * 1e18))) / 1e18;
+                (FixedPointMathLib.powWad(WAD - (WAD / _denominator), _exponent * WAD))) / WAD;
     }
 }
