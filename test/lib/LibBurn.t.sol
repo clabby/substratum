@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
 import { TestUtils } from "test/testutils/TestUtils.sol";
-import { TestArithmetic } from "test/testutils/TestArithmetic.sol";
 import { LibBurn } from "src/lib/LibBurn.sol";
 import "src/types/Types.sol";
 
