@@ -2,9 +2,8 @@
 pragma solidity ^0.8.19;
 
 /// @title LibBurn
-/// @notice Utilities for burning Gas and Ether 
+/// @notice Utilities for burning Gas and Ether
 library LibBurn {
-
     /// Burns a given amount of ETH.
     /// @param _amount Amount of ETH to burn.
     function eth(uint256 _amount) internal {
@@ -12,7 +11,7 @@ library LibBurn {
     }
 
     /// Burns a given amount of gas.
-    /// @param _amount Amount of gas to burn.  
+    /// @param _amount Amount of gas to burn.
     function gas(uint256 _amount) internal view {
         uint256 initialGas = gasleft();
         uint256 i = 0;
@@ -30,15 +29,7 @@ library LibBurn {
 contract Burner {
     constructor() payable {
         assembly {
-            pop(call(
-                gas(),
-                address(),
-                callvalue(),
-                0x0,
-                0x0,
-                0x0,
-                0x0
-            ))
+            pop(call(gas(), address(), callvalue(), 0x0, 0x0, 0x0, 0x0))
         }
     }
 }

@@ -10,7 +10,6 @@ import "src/types/Types.sol";
 /// @title LibBurn_Test
 /// @notice Tests for the `LibBurn` library.
 contract LibBurn_Test is Test {
-
     /// @dev Tests gas is correctly burned within 5 gas of the expected amount
     function testBurnGas() public {
         uint256 currentGas = gasleft();
@@ -20,7 +19,7 @@ contract LibBurn_Test is Test {
         uint256 newGas = gasleft();
 
         // Minor amount of inevitable overhead
-        assertTrue(currentGas - newGas == 5000152); 
+        assertTrue(currentGas - newGas == 5000152);
     }
 
     /// @dev Tests Ether is correctly removed from the circulating supply
