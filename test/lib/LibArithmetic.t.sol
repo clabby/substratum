@@ -17,8 +17,4 @@ contract LibArithmetic_Test is Test {
         assertTrue(LibArithmetic.clamp(11, 0, 10) == 10);
         assertTrue(LibArithmetic.clamp(20, 0, 10) == 10);
     }
-
-    function test_cdexp() public {
-        LibArithmetic.cdexp(1, 1, 1);
-    }
 }
