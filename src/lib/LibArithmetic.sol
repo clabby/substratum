@@ -18,15 +18,11 @@ library LibArithmetic {
             switch and(a_is_positive, b_is_positive)
             case 1 {
                 result := b
-                if gt(a, b) {
-                    result := a
-                }
+                if gt(a, b) { result := a }
             }
             default {
                 result := b
-                if eq(shr(255, a), 0) {
-                    result := a
-                }
+                if eq(shr(255, a), 0) { result := a }
             }
         }
     }
@@ -39,15 +35,11 @@ library LibArithmetic {
             switch and(a_is_positive, b_is_positive)
             case 1 {
                 result := b
-                if lt(a, b) {
-                    result := a
-                }
+                if lt(a, b) { result := a }
             }
             default {
                 result := b
-                if eq(shr(255, b), 0) {
-                    result := a
-                }
+                if eq(shr(255, b), 0) { result := a }
             }
         }
     }
