@@ -13,6 +13,7 @@ import "src/types/Types.sol";
 contract LibBurn_Test is Test {
     /// @dev Tests gas is correctly burned within 5 gas of the expected amount
     function testFuzzBurnGas(uint16 gas_to_burn) public {
+        vm.assume(gas_to_burn > 500); // Otherwise overhead will break accuracy
         uint256 startGas = gasleft();
 
         LibBurn.gas(gas_to_burn);
@@ -20,7 +21,7 @@ contract LibBurn_Test is Test {
         uint256 newGas = gasleft();
 
         // Minor amount of inevitable overhead
-        assertTrue(startGas - newGas < uint256(gas_to_burn) + 500);
+        assertTrue(startGas - newGas < uint256(gas_to_burn) + 500 && startGas - newGas > uint256(gas_to_burn) - 500);
     }
 
     /// @dev Tests Ether is correctly removed from the circulating supply
