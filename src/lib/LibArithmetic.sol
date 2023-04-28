@@ -10,7 +10,7 @@ library LibArithmetic {
         return min(max(_value, _min), _max);
     }
 
-    /// @notice Returns the smallest of two signed numbers.
+    /// @notice Returns the largest of two signed numbers.
     function max(int256 a, int256 b) internal pure returns (int256 result) {
         assembly ("memory-safe") {
             let a_is_positive := eq(shr(255, a), 0)
