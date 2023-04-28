@@ -25,12 +25,12 @@ contract LibBurn_Test is Test {
     }
 
     /// @dev Tests Ether is correctly removed from the circulating supply
-    function testBurnEther() public {
-        vm.deal(address(this), 10 ether);
+    function testBurnEther(uint256 amount) public {
+        vm.deal(address(this), amount);
 
-        assertTrue(address(this).balance == 10 ether);
+        assertTrue(address(this).balance == amount);
 
-        LibBurn.eth(10 ether);
+        LibBurn.eth(amount);
 
         uint256 newBalance = address(this).balance;
 

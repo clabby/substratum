@@ -7,7 +7,23 @@ library LibBurn {
     /// Burns a given amount of ETH.
     /// @param _amount Amount of ETH to burn.
     function eth(uint256 _amount) internal {
-        new Burner{ value: _amount }();
+        assembly ("memory-safe") {
+            // Store creation code of no-op contract
+            // PUSH1 0xFE (Invalid opcode)
+            // PUSH1 0x00  \
+            // MSTORE       > Replace with PUSH0 / CHAINID for mainnet.
+            // PUSH1 0x01  /
+            // PUSH1 0x1F
+            // RETURN
+            mstore(0x00, 0x60fe6000526001601ff3)
+            let success := create(_amount, 0x16, 0x0a)
+
+            if iszero(success) {
+                // "BurnFailed()" error
+                mstore(0x00, 0x6f16aafc)
+                revert(0x1c, 0x04)
+            }
+        }
     }
 
     /// Burns a given amount of gas.
@@ -17,17 +33,6 @@ library LibBurn {
         uint256 initialGas = gasleft();
         while (initialGas - gasleft() < _amount) {
             ++i;
-        }
-    }
-}
-
-/// @title Burner
-/// @notice Burner sends all ETH to itself, and contains no-code, effectively removing ETH from the supply
-///      previously implementations have used SELFDESTRUCT, but this is no longer reccomended due to its impending deprecation
-contract Burner {
-    constructor() payable {
-        assembly {
-            pop(call(gas(), address(), callvalue(), 0x0, 0x0, 0x0, 0x0))
         }
     }
 }
