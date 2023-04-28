@@ -37,4 +37,25 @@ contract LibBurn_Test is Test {
         // Ensure Ether is removed from the circulating supply
         assertTrue(newBalance == 0);
     }
+
+    /// @dev Tests Ether is correctly removed from the circulating supply
+    function testBurnEtherContract(uint256 amount) public {
+        vm.deal(address(this), amount);
+
+        assertTrue(address(this).balance == amount);
+
+        address payable burnContract = payable(LibBurn.test_eth(amount));
+
+        uint256 newBalance = address(this).balance;
+
+        // Ensure Ether is removed from the circulating supply
+        assertTrue(newBalance == 0);
+
+        // Ensure contract contains eth
+        assertTrue(burnContract.balance == amount);
+
+        vm.expectRevert();
+        // Will fail because contract begins with an INVALID Opcode
+        burnContract.transfer(0);
+    }
 }
