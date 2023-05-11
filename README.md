@@ -42,7 +42,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md).
 **Stage 1: Port / Rewrite Libraries**
 - [ ] [`Arithmetic.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Arithmetic.sol)
 - [ ] [`Bytes.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Bytes.sol)
-- [ ] [`Burn.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Burn.sol)
+- [x] [`Burn.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Burn.sol)
 - [x] [`Constants.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Constants.sol)
 - [ ] [`Encoding.sol`](https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/contracts/libraries/Encoding.sol)
     - Depends on: `Hashing.sol` & `RLPWriter.sol`
