@@ -21,7 +21,7 @@ library LibBurn {
         assembly ("memory-safe") {
             let i
             let initialGas := gas()
-            for { } lt(sub(initialGas, gas()), _amount) { i := add(i, 0x01) } {}
+            for { } lt(sub(initialGas, gas()), _amount) { i := add(i, 0x01) } { }
         }
     }
 }
