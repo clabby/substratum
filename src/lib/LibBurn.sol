@@ -13,10 +13,10 @@ library LibBurn {
     /// @notice Burns a given amount of gas.
     /// @param _amount Amount of gas to burn.
     function gas(uint256 _amount) internal view {
-        uint256 i = 0;
-        uint256 initialGas = gasleft();
-        while (initialGas - gasleft() < _amount) {
-            ++i;
+        assembly ("memory-safe") {
+            let i
+            let initialGas := gas()
+            for { } lt(sub(initialGas, gas()), _amount) { i := add(i, 0x01) } {}
         }
     }
 }
